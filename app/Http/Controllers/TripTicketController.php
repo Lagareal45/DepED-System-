@@ -69,9 +69,9 @@ class TripTicketController extends Controller
             GasSlip::updateOrCreate(
                 [
                     'document_no' => $tripTicket->document_no,
-                    'user_id' => $user->id,
                 ],
                 [
+                    'user_id' => $user->id,
                     'date' => $data['date'] ?? null,
                     'driver' => $data['driver'] ?? null,
                     'plate_no' => $data['plate_no'] ?? null,
@@ -90,63 +90,113 @@ class TripTicketController extends Controller
 
     public function monthlyReport(Request $request)
     {
-        $user = $request->user();
+        try {
+            $user = $request->user();
 
-        $date = $request->input('date');
-        $driver = $request->input('driver');
-        $vehicle = $request->input('vehicle') ?? $request->input('vehicle_type');
+            $date = $request->input('date');
+            $driver = $request->input('driver');
+            $vehicle = $request->input('vehicle') ?? $request->input('vehicle_type');
 
-        $query = TripTicket::where('user_id', $user->id);
+            $query = TripTicket::query();
 
-        if ($date) {
-            $query->whereYear('date', date('Y', strtotime($date)))
-                  ->whereMonth('date', date('m', strtotime($date)));
-        }
-
-        if ($driver) {
-            $query->where('driver', 'like', '%' . $driver . '%');
-        }
-
-        if ($vehicle) {
-            $query->where('vehicle', 'like', '%' . $vehicle . '%');
-        }
-
-        $tickets = $query->orderBy('date', 'asc')->get();
-
-        // Group by date and aggregate data
-        $reportData = [];
-        $firstTicket = $tickets->first();
-        
-        foreach ($tickets as $ticket) {
-            if (!$ticket->date) {
-                continue;
+            if ($date) {
+                $query->whereYear('date', date('Y', strtotime($date)))
+                      ->whereMonth('date', date('m', strtotime($date)));
             }
-            $dateKey = $ticket->date->format('Y-m-d');
-            $dayOfMonth = (int)$ticket->date->format('d');
 
-            // Fetch matching gas slip for this ticket (by document_no and user_id)
-            $gasSlip = GasSlip::where('document_no', $ticket->document_no)
-                ->where('user_id', $ticket->user_id)
-                ->first();
+            if ($driver) {
+                $query->where('driver', 'like', '%' . $driver . '%');
+            }
 
-            $numberOfCylinder = $gasSlip ? $gasSlip->number_of_cylinder : null;
+            if ($vehicle) {
+                $query->where('vehicle', 'like', '%' . $vehicle . '%');
+            }
 
-            if (!isset($reportData[$dateKey])) {
-                $reportData[$dateKey] = [
-                    'day' => $dayOfMonth,
-                    'date' => $dateKey,
-                    'vehicle' => $ticket->vehicle ?? '',
-                    'distance_start' => $ticket->speed_at_beginning ?? '',
-                    'distance_end' => $ticket->speed_at_end ?? '',
-                    'oil_used' => $ticket->gear_oil_used ?? 0,
-                    'grease_used' => $ticket->greased_oil_used ?? 0,
-                    'remarks' => $ticket->remarks ?? '',
-                    'number_of_cylinder' => $numberOfCylinder,
-                ];
-            } else {
+            $tickets = $query->orderBy('date', 'asc')->get();
+
+            // Group by date and aggregate data
+            $reportData = [];
+            $firstTicket = $tickets->first();
+            
+            foreach ($tickets as $ticket) {
+                if (!$ticket->date) {
+                    continue;
+                }
+                $dateKey = $ticket->date->format('Y-m-d');
+                $dayOfMonth = (int)$ticket->date->format('d');
+
+                // Fetch matching gas slip for this ticket (by document_no)
+                $gasSlip = GasSlip::where('document_no', $ticket->document_no)
+                    ->first();
+
+                $numberOfCylinder = $gasSlip ? $gasSlip->number_of_cylinder : null;
+                
+                // Calculate distance traveled using odometer readings
+                $distanceTraveled = null;
+                if ($gasSlip && isset($gasSlip->odometer_before) && isset($gasSlip->odometer_after) && $gasSlip->odometer_before !== null && $gasSlip->odometer_after !== null) {
+                    $distanceTraveled = (float) $gasSlip->odometer_after - (float) $gasSlip->odometer_before;
+                }
+                
+                // Get gasoline consumed from gasoline deducted field
+                $gasolineConsumed = null;
+                if ($ticket && isset($ticket->gasoline_deducted) && $ticket->gasoline_deducted !== null) {
+                    $gasolineConsumed = (float) $ticket->gasoline_deducted;
+                }
+
+                if (!isset($reportData[$dateKey])) {
+                    $reportData[$dateKey] = [
+                        'day' => $dayOfMonth,
+                        'date' => $dateKey,
+                        'vehicle' => $ticket->vehicle ?? '',
+                        'distance_start' => $ticket->speed_at_beginning ?? '',
+                        'distance_end' => $ticket->speed_at_end ?? '',
+                        'distance_traveled' => null,
+                        'odometer_before' => null,
+                        'odometer_after' => null,
+                        'gasoline_consumed' => null,
+                        'total_fuel_used' => 0, // Will be incremented below
+                        'oil_used' => 0,
+                        'grease_used' => 0,
+                        'remarks' => '',
+                        'number_of_cylinder' => null,
+                    ];
+                }
+                // 1. Calculate the formula variables
+                $a = (float)($ticket->gasoline_balance_in_tank ?? 0);
+                $b = (float)($ticket->gasoline_issued ?? 0);
+                $c = (float)($ticket->gasoline_purchased ?? 0);
+                $e = (float)($ticket->gasoline_deducted ?? 0);
+                
+                // f. Balance in tank(Liters) = a + b + c - e
+                $f = $a + $b + $c - $e;
+                
+                // User requested formula: "a. Balance in tank" + "c. purchased" - "f. Balance in tank" = "Total Fuel Used"
+                $totalFuelUsed = $a + $c - $f;
+                // Accumulate total fuel used for the date
+                $reportData[$dateKey]['total_fuel_used'] += $totalFuelUsed;
+
                 // Aggregate values for same date
-                $reportData[$dateKey]['oil_used'] += $ticket->gear_oil_used ?? 0;
+                $reportData[$dateKey]['oil_used'] = ($reportData[$dateKey]['oil_used'] ?? 0) + ($ticket->gear_oil_used ?? 0);
                 $reportData[$dateKey]['grease_used'] = ($reportData[$dateKey]['grease_used'] ?? 0) + ($ticket->greased_oil_used ?? 0);
+                
+                // For distance traveled, add to existing if there's already a value
+                if ($distanceTraveled !== null) {
+                    $reportData[$dateKey]['distance_traveled'] = ($reportData[$dateKey]['distance_traveled'] ?? 0) + $distanceTraveled;
+                }
+                
+                // For gasoline consumed, add to existing if there's already a value
+                if ($gasolineConsumed !== null) {
+                    $reportData[$dateKey]['gasoline_consumed'] = ($reportData[$dateKey]['gasoline_consumed'] ?? 0) + $gasolineConsumed;
+                }
+                
+                // Update odometer readings if they're not set yet (use first available readings)
+                if (!isset($reportData[$dateKey]['odometer_before']) && $reportData[$dateKey]['odometer_before'] === null && $gasSlip && isset($gasSlip->odometer_before) && $gasSlip->odometer_before !== null) {
+                    $reportData[$dateKey]['odometer_before'] = $gasSlip->odometer_before;
+                }
+                if (!isset($reportData[$dateKey]['odometer_after']) && $reportData[$dateKey]['odometer_after'] === null && $gasSlip && isset($gasSlip->odometer_after) && $gasSlip->odometer_after !== null) {
+                    $reportData[$dateKey]['odometer_after'] = $gasSlip->odometer_after;
+                }
+                
                 if ($ticket->remarks) {
                     $reportData[$dateKey]['remarks'] = ($reportData[$dateKey]['remarks'] ? $reportData[$dateKey]['remarks'] . '; ' : '') . $ticket->remarks;
                 }
@@ -155,19 +205,29 @@ class TripTicketController extends Controller
                     $reportData[$dateKey]['number_of_cylinder'] = $numberOfCylinder;
                 }
             }
+
+            // Convert to array and sort by day
+            $reportArray = array_values($reportData);
+            usort($reportArray, function ($a, $b) {
+                return ($a['day'] ?? 0) - ($b['day'] ?? 0);
+            });
+
+            return response()->json([
+                'data' => $reportArray,
+                'driver' => $firstTicket->driver ?? '',
+                'plate_no' => $firstTicket->plate_no ?? '',
+                'report_date' => $date ? date('F j, Y', strtotime($date)) : ($firstTicket && $firstTicket->date ? $firstTicket->date->format('F j, Y') : date('F j, Y')),
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Monthly Report Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to generate monthly report: ' . $e->getMessage(),
+                'data' => [],
+                'driver' => '',
+                'plate_no' => '',
+                'report_date' => date('F j, Y'),
+            ], 500);
         }
-
-        // Convert to array and sort by day
-        $reportArray = array_values($reportData);
-        usort($reportArray, function ($a, $b) {
-            return ($a['day'] ?? 0) - ($b['day'] ?? 0);
-        });
-
-        return response()->json([
-            'data' => $reportArray,
-            'driver' => $firstTicket->driver ?? '',
-            'plate_no' => $firstTicket->plate_no ?? '',
-            'report_date' => $date ? date('F Y', strtotime($date)) : ($firstTicket && $firstTicket->date ? $firstTicket->date->format('F Y') : date('F Y')),
-        ]);
     }
 }

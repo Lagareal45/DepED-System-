@@ -26,6 +26,8 @@ interface ReportRow {
     number_of_cylinder?: string | number;
     vehicle_type?: string;
     vehicle?: string;
+    total_fuel_used?: number | string;
+    total_liters?: number | string;
 }
 
 interface ReportInfo {
@@ -59,82 +61,131 @@ export default function FuelUsageSummary() {
         return match ? match.split('=')[1] : undefined;
     };
 
+    const toNumberOrNull = (value: unknown): number | null => {
+        if (value === null || value === undefined) return null;
+        if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+        if (typeof value === 'string') {
+            const cleaned = value.replace(/,/g, '').trim();
+            if (cleaned === '') return null;
+            const n = Number(cleaned);
+            return Number.isFinite(n) ? n : null;
+        }
+        const n = Number(value as any);
+        return Number.isFinite(n) ? n : null;
+    };
+
+    const normalizeText = (value: unknown): string => {
+        if (value === null || value === undefined) return '';
+        return String(value).trim().toLowerCase();
+    };
+
+    const normalizeDateKey = (value: unknown): string => {
+        if (!value) return '';
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            const m = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
+            if (m) return trimmed.slice(0, 10);
+        }
+        const d = new Date(value as any);
+        if (Number.isNaN(d.getTime())) return '';
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
     // Fetch gas slip data for selected period
     const fetchGasSlipData = async (date: string, vehicleType?: string) => {
         try {
             const selectedDate = new Date(date);
             const year = selectedDate.getFullYear();
             const month = selectedDate.getMonth() + 1;
-            
-            console.log('Fetching gas slips for:', { year, month, vehicleType });
+
+            console.log('🔥 FETCHING GAS SLIPS FOR:', {
+                year,
+                month,
+                vehicleType,
+                selectedDate: selectedDate.toISOString().split('T')[0]
+            });
+            console.log('🔥 API CALL: /gas-slips/monthly');
+
             const gasSlips = await gasSlipService.getMonthlyGasSlips(year, month, vehicleType);
-            console.log('Received gas slips:', gasSlips);
-            
-            // Test: Check if any gas slip has odometer_before = 1400
-            const test1400 = gasSlips.find(slip => slip.odometer_before === 1400);
-            console.log('🔍 TEST: Found gas slip with odometer_before = 1400?', test1400);
-            
-            // Test: Check all odometer_before values
-            const allOdometerValues = gasSlips.map(slip => ({
-                document_no: slip.document_no,
-                date: slip.date,
-                vehicle_type: slip.vehicle_type,
-                odometer_before: slip.odometer_before
-            }));
-            console.log('🔍 TEST: All odometer_before values:', allOdometerValues);
-            
+            console.log('🔥 RAW GAS SLIPS RECEIVED:', gasSlips);
+            console.log('🔥 GAS SLIP COUNT:', gasSlips.length);
+
+            if (gasSlips.length === 0) {
+                console.log('❌ NO GAS SLIPS FOUND - this is the problem!');
+                return [];
+            }
+
+            // Debug each gas slip
+            gasSlips.forEach((slip, index) => {
+                console.log(`🔥 GAS SLIP ${index}:`, {
+                    document_no: slip.document_no,
+                    date: slip.date,
+                    dateObj: new Date(slip.date),
+                    dateString: new Date(slip.date).toDateString(),
+                    odometer_before: slip.odometer_before,
+                    odometer_after: slip.odometer_after,
+                    vehicle_type: slip.vehicle_type,
+                    plate_no: slip.plate_no
+                });
+            });
+
             setGasSlipData(gasSlips);
             return gasSlips;
         } catch (error) {
-            console.error('Error fetching gas slip data:', error);
+            console.error('❌ ERROR fetching gas slip data:', error);
             return [];
         }
     };
 
     // Merge trip ticket data with gas slip odometer readings
     const mergeDataWithGasSlips = (tripTicketData: ReportRow[], gasSlips: any[]) => {
-        console.log('=== MERGE DEBUG START ===');
-        console.log('Trip ticket data:', JSON.stringify(tripTicketData, null, 2));
-        console.log('Gas slips found:', JSON.stringify(gasSlips, null, 2));
-        console.log('Merging data:', { tripTicketData: tripTicketData.length, gasSlips: gasSlips.length });
-        
+        console.log('=== 🔥 MERGE DEBUG START ===');
+        console.log('🔥 TRIP TICKET ROWS:', tripTicketData.length);
+        console.log('🔥 GAS SLIPS FOUND:', gasSlips.length);
+
+        const pickBestGasSlipForRow = (row: ReportRow) => {
+            const rowDateKey = normalizeDateKey(row.date);
+            if (!rowDateKey) return null;
+
+            const rowVehicle = normalizeText(row.vehicle_type || row.vehicle);
+            const rowPlate = normalizeText(row.plate_no);
+            const searchVehicle = normalizeText(search);
+
+            const slipsSameDate = gasSlips.filter((slip) => normalizeDateKey(slip.date) === rowDateKey);
+            if (slipsSameDate.length === 0) return null;
+
+            const slipsPlateMatch = rowPlate
+                ? slipsSameDate.filter((slip) => normalizeText(slip.plate_no) === rowPlate)
+                : [];
+            if (slipsPlateMatch.length === 1) return slipsPlateMatch[0];
+            if (slipsPlateMatch.length > 1) return slipsPlateMatch[0];
+
+            const slipsVehicleMatch = rowVehicle
+                ? slipsSameDate.filter((slip) => normalizeText(slip.vehicle_type || slip.vehicle) === rowVehicle)
+                : [];
+            if (slipsVehicleMatch.length === 1) return slipsVehicleMatch[0];
+            if (slipsVehicleMatch.length > 1) return slipsVehicleMatch[0];
+
+            const slipsSearchVehicleMatch = searchVehicle
+                ? slipsSameDate.filter((slip) => normalizeText(slip.vehicle_type || slip.vehicle) === searchVehicle)
+                : [];
+            if (slipsSearchVehicleMatch.length === 1) return slipsSearchVehicleMatch[0];
+            if (slipsSearchVehicleMatch.length > 1) return slipsSearchVehicleMatch[0];
+
+            // Last resort: if there is exactly one gas slip on that date, use it.
+            if (slipsSameDate.length === 1) return slipsSameDate[0];
+
+            return null;
+        };
+
         return tripTicketData.map((row, rowIndex) => {
-            console.log(`\n--- Processing Row ${rowIndex} ---`);
-            console.log('Row data:', JSON.stringify(row, null, 2));
-            
-            // Find matching gas slip by vehicle type and date
-            const matchingGasSlip = gasSlips.find(gasSlip => {
-                const gasSlipDate = new Date(gasSlip.date).toDateString();
-                const rowDate = new Date(row.date).toDateString();
-                const matches = gasSlipDate === rowDate && 
-                       (gasSlip.vehicle_type === row.vehicle_type || 
-                        gasSlip.vehicle_type === row.vehicle ||
-                        gasSlip.plate_no === row.plate_no);
-                
-                console.log('Matching check:', {
-                    gasSlipDate,
-                    rowDate,
-                    dateMatch: gasSlipDate === rowDate,
-                    gasSlipVehicle: gasSlip.vehicle_type,
-                    rowVehicle: row.vehicle_type,
-                    gasSlipPlate: gasSlip.plate_no,
-                    rowPlate: row.plate_no,
-                    vehicleMatch: gasSlip.vehicle_type === row.vehicle_type || gasSlip.vehicle_type === row.vehicle,
-                    plateMatch: gasSlip.plate_no === row.plate_no,
-                    finalMatch: matches
-                });
-                
-                if (matches) {
-                    console.log('✅ FOUND MATCHING GAS SLIP:', {
-                        document_no: gasSlip.document_no,
-                        odometer_before: gasSlip.odometer_before,
-                        odometer_after: gasSlip.odometer_after,
-                        date: gasSlip.date
-                    });
-                }
-                
-                return matches;
-            });
+            console.log(`\n--- 🔄 Processing Row ${rowIndex} ---`);
+            console.log('📋 TRIP TICKET ROW:', JSON.stringify(row, null, 2));
+
+            const matchingGasSlip = pickBestGasSlipForRow(row);
 
             // If we have matching gas slip data, use its odometer readings
             if (matchingGasSlip) {
@@ -152,7 +203,7 @@ export default function FuelUsageSummary() {
                     from_gas_slip: true,
                     gas_slip_document_no: matchingGasSlip.document_no,
                 };
-                
+
                 console.log('🔄 MERGED ROW:', {
                     originalStart: row.distance_start,
                     originalEnd: row.distance_end,
@@ -161,7 +212,7 @@ export default function FuelUsageSummary() {
                     from_gas_slip: mergedRow.from_gas_slip,
                     gas_slip_document_no: mergedRow.gas_slip_document_no
                 });
-                
+
                 return mergedRow;
             } else {
                 console.log('❌ NO MATCH FOUND - keeping original row');
@@ -170,55 +221,35 @@ export default function FuelUsageSummary() {
         });
     };
 
-    // Direct override function to ensure gas slip data takes priority
+    // Ensure gas slip data takes priority explicitly prioritizing odometer_before / odometer_after
     const getOdometerValue = (row: any, type: 'start' | 'end') => {
-        // If row has gas slip data, use it - this directly maps Gas Slip "Odometer Before" to "ODOMETER Beginning"
-        if (row.from_gas_slip) {
-            console.log(`🔥 USING GAS SLIP DATA for ${type}:`, {
-                from_gas_slip: row.from_gas_slip,
-                distance_start: row.distance_start, // This comes from gas_slip.odometer_before
-                distance_end: row.distance_end,     // This comes from gas_slip.odometer_after
-                gas_slip_document_no: row.gas_slip_document_no,
-                message: `Gas Slip "Odometer Before" (${row.distance_start}) -> "ODOMETER Beginning"`
-            });
-            return type === 'start' ? row.distance_start : row.distance_end;
+        // We always want to prioritize Gas Slip's "odometer_before" and "odometer_after"
+        const gasSlipVal = type === 'start' ? row.odometer_before : row.odometer_after;
+        const mappedGasSlipVal = toNumberOrNull(gasSlipVal);
+
+        if (mappedGasSlipVal !== null) {
+            return mappedGasSlipVal;
         }
-        
-        // Otherwise, use trip ticket data - check all possible field names
-        const fallback = type === 'start' 
-            ? (row.distance_start ?? row.odometer_before ?? row.speed_at_beginning)
-            : (row.distance_end ?? row.odometer_after ?? row.speed_at_end);
-            
-        console.log(`📋 USING TRIP TICKET DATA for ${type}:`, {
-            from_gas_slip: row.from_gas_slip,
-            distance_start: row.distance_start,
-            odometer_before: row.odometer_before,
-            speed_at_beginning: row.speed_at_beginning,
-            fallback,
-            allFields: {
-                distance_start: row.distance_start,
-                odometer_before: row.odometer_before,
-                speed_at_beginning: row.speed_at_beginning,
-                distance_end: row.distance_end,
-                odometer_after: row.odometer_after,
-                speed_at_end: row.speed_at_end
-            }
-        });
-        
-        return fallback;
+
+        // Fallback to trip ticket data if Gas Slip data is missing
+        const fallbackRaw = type === 'start'
+            ? (row.distance_start ?? row.speed_at_beginning)
+            : (row.distance_end ?? row.speed_at_end);
+
+        return toNumberOrNull(fallbackRaw);
     };
 
     // Check if a row's odometer data comes from gas slip
     const isFromGasSlip = (row: any) => {
-        return row.from_gas_slip || 
-               gasSlipData.some(gasSlip => {
-                   const gasSlipDate = new Date(gasSlip.date).toDateString();
-                   const rowDate = new Date(row.date).toDateString();
-                   return gasSlipDate === rowDate && 
-                          (gasSlip.vehicle_type === row.vehicle_type || 
-                           gasSlip.vehicle_type === row.vehicle ||
-                           gasSlip.plate_no === row.plate_no);
-               });
+        return row.from_gas_slip ||
+            gasSlipData.some(gasSlip => {
+                const gasSlipDate = new Date(gasSlip.date).toDateString();
+                const rowDate = new Date(row.date).toDateString();
+                return gasSlipDate === rowDate &&
+                    (gasSlip.vehicle_type === row.vehicle_type ||
+                        gasSlip.vehicle_type === row.vehicle ||
+                        gasSlip.plate_no === row.plate_no);
+            });
     };
 
     const handleGenerate = async () => {
@@ -309,16 +340,18 @@ export default function FuelUsageSummary() {
                 return m ? m.toUpperCase() : '________';
             })();
             const tableRows = reportData.map((row, idx) => {
-                const startRaw = row.distance_start ?? row.odometer_before;
-                const endRaw = row.distance_end ?? row.odometer_after;
-                const start = startRaw !== null && startRaw !== undefined ? Number(startRaw) : '';
-                const end = endRaw !== null && endRaw !== undefined ? Number(endRaw) : '';
-                const totalDistance = (typeof start === 'number' && typeof end === 'number') ? start - end : '';
-                const fuelUsed = row.oil_used ?? '';
-                const normalTravelKmPerLiter = 12;
-                const distancePerLiter = (totalDistance && fuelUsed) ? (Number(totalDistance) / Number(fuelUsed)).toFixed(2) : '';
-                const totalLitersWithAllowance = (totalDistance && normalTravelKmPerLiter) ? ((Number(totalDistance) / normalTravelKmPerLiter) * 1.1).toFixed(2) : '';
-                const excess = (fuelUsed && totalLitersWithAllowance) ? (Number(fuelUsed) - Number(totalLitersWithAllowance)).toFixed(2) : '';
+                const startVal = getOdometerValue(row, 'start');
+                const endVal = getOdometerValue(row, 'end');
+                const start = startVal !== null ? startVal : '';
+                const end = endVal !== null ? endVal : '';
+                const totalDistanceNumber = (start !== '' && end !== '') ? Number(end) - Number(start) : null;
+                const totalDistance = totalDistanceNumber !== null ? totalDistanceNumber : '';
+                const fuelUsedValue = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
+                const fuelUsed = Number(fuelUsedValue);
+                const normalTravelKmPerLiter = 6;
+                const distancePerLiter = totalDistanceNumber !== null ? (fuelUsed > 0 ? (totalDistanceNumber / fuelUsed).toFixed(2) : '0.00') : '';
+                const totalLitersWithAllowance = totalDistanceNumber !== null ? ((totalDistanceNumber / normalTravelKmPerLiter) * 1.1).toFixed(2) : '';
+                const excess = totalLitersWithAllowance !== '' ? (fuelUsed - Number(totalLitersWithAllowance)).toFixed(2) : '';
                 // Plate number logic matches the on-screen table
                 const firstRow = reportData[0] || {};
                 const plateNo = row.plate_no || (reportInfo && reportInfo.plate_no) || firstRow.plate_no || '';
@@ -340,8 +373,13 @@ export default function FuelUsageSummary() {
                 </tr>`;
             }).join('');
             const printableHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fuel Usage Summary</title><style>
+                @media print {
+                    @page { margin: 0; }
+                    body { margin: 1.5cm; }
+                }
                 body { font-family: 'Times New Roman', serif; font-size: 10pt; margin: 12px; color: #000; }
-                .header { text-align: center; margin-bottom: 8px; }
+                .header { text-align: center; margin-bottom: 8px; position: relative; }
+                .header .appendix { position: absolute; right: 0; top: -12px; font-size: 10pt; font-weight: bold; }
                 .header .org { font-size: 9pt; margin: 0; line-height: 1.1; }
                 .header .title { font-size: 12pt; font-weight: bold; margin: 4px 0 2px; }
                 table { width: 100%; border-collapse: collapse; font-size: 10pt; border: 1px solid #000; }
@@ -354,6 +392,7 @@ export default function FuelUsageSummary() {
                 .footer-value { text-align: center; border-bottom: 1px solid #888; padding-bottom: 4px; margin-bottom: 8px; }
             </style></head><body>
                 <div class="header">
+                    <div class="appendix">Appendix G</div>
                     <div class="org">Republic of the Philippines</div>
                     <div class="org">Department of Education</div>
                     <div class="org">Schools Division of Bukidnon</div>
@@ -362,18 +401,22 @@ export default function FuelUsageSummary() {
                 <table>
                     <thead>
                         <tr>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Type of Vehicle</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Plate Number</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Number of Cylinder</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">ODOMETER Beginning</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Reading Ending</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Distance Travelled (A)</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Fuel Used (B)</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Distance Travelled Per Liter (C=A%B)</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Normal Travel Km. Per Liter (D)</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Excess</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Remarks</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Type of Vehicle</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Plate Number</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Number of Cylinder</th>
+                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">ODOMETER</th>
+                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Reading</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Distance Travelled (A)</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Fuel Used (B)</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Distance Travelled Per Liter (C=A%B)</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Normal Travel Km. Per Liter (D)</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Excess</th>
+                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Remarks</th>
+                        </tr>
+                        <tr>
+                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Beginning</th>
+                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Ending</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -466,18 +509,15 @@ export default function FuelUsageSummary() {
                             <Fuel className="w-4 h-4" />
                             <span>
                                 <strong>Gas Slip Data Integrated:</strong> Odometer readings and fuel consumption data from {gasSlipData.length} gas slip(s) have been automatically merged into this report.
-                                <Fuel className="w-3 h-3 inline ml-1" /> icons indicate data sourced from gas slips.
                             </span>
                         </div>
                     </div>
                 )}
                 <Card className="shadow-lg border border-border bg-background">
-                    <CardHeader>
-                        <CardTitle>Appendix G - Fuel Usage Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-foreground" style={{ textAlign: 'center', marginTop: '8px' }}>
-                            <div>Republic of the Philippines</div>
+                    <CardContent className="pt-2">
+                        <div className="text-foreground relative" style={{ textAlign: 'center', marginTop: '0px' }}>
+                            <div className="absolute top-0 right-4 font-bold hidden sm:block text-sm">Appendix G</div>
+                            <div className="pt-6">Republic of the Philippines</div>
                             <div>Department of Education</div>
                             <div>Schools Division of Bukidnon</div>
                             <div style={{ fontWeight: 'bold', margin: '16px 0 24px', fontSize: '18px' }}>
@@ -497,25 +537,29 @@ export default function FuelUsageSummary() {
                         <table className="border border-border" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt', marginTop: '24px' }}>
                             <thead>
                                 <tr>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Type of Vehicle</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Plate Number</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Number of Cylinder</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>ODOMETER Beginning</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Reading Ending</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Fuel Used (B)</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Distance Travelled Per Liter (C=A%B)</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Normal Travel Km. Per Liter (D)</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Excess</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Remarks</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Type of Vehicle</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Plate Number</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Number of Cylinder</th>
+                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>ODOMETER</th>
+                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Reading</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Fuel Used (B)</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Distance Travelled Per Liter (C=A%B)</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Normal Travel Km. Per Liter (D)</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Excess</th>
+                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Remarks</th>
+                                </tr>
+                                <tr>
+                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Beginning</th>
+                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Ending</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {reportData && reportData.length > 0 ? (
                                     reportData.map((item, idx) => {
                                         const row = item as any;
-                                        
+
                                         // Debug logging for each row
                                         console.log(`Row ${idx} data:`, {
                                             from_gas_slip: row.from_gas_slip,
@@ -525,38 +569,31 @@ export default function FuelUsageSummary() {
                                             odometer_after: row.odometer_after,
                                             gas_slip_document_no: row.gas_slip_document_no
                                         });
-                                        
+
                                         const start = getOdometerValue(row, 'start');
                                         const end = getOdometerValue(row, 'end');
                                         const totalDistanceNumber =
                                             typeof start === 'number' && !Number.isNaN(start) &&
-                                            typeof end === 'number' && !Number.isNaN(end)
-                                                ? start - end
+                                                typeof end === 'number' && !Number.isNaN(end)
+                                                ? end - start
                                                 : null;
 
-                                        const fuelUsedSource = row.total_fuel_used ?? row.total_liters ?? row.oil_used;
-                                        const fuelUsedNumber =
-                                            typeof fuelUsedSource === 'number'
-                                                ? fuelUsedSource
-                                                : Number(fuelUsedSource);
+                                        const fuelUsedSource = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
+                                        const fuelUsedNumber = typeof fuelUsedSource === 'number' ? fuelUsedSource : Number(fuelUsedSource) || 0;
 
-                                        const hasFuelUsed = !Number.isNaN(fuelUsedNumber) && fuelUsedNumber > 0;
-                                        const normalTravelKmPerLiter = 12; // D – assumed standard value
+                                        const normalTravelKmPerLiter = 6; // D – assumed standard value
 
-                                        const distancePerLiter =
-                                            totalDistanceNumber !== null && hasFuelUsed && fuelUsedNumber !== 0
-                                                ? totalDistanceNumber / fuelUsedNumber
-                                                : null;
+                                        const distancePerLiter = totalDistanceNumber !== null
+                                            ? (fuelUsedNumber > 0 ? totalDistanceNumber / fuelUsedNumber : 0)
+                                            : null;
 
-                                        const totalLitersWithAllowance =
-                                            totalDistanceNumber !== null && normalTravelKmPerLiter > 0
-                                                ? (totalDistanceNumber / normalTravelKmPerLiter) * 1.1
-                                                : null;
+                                        const totalLitersWithAllowance = totalDistanceNumber !== null && normalTravelKmPerLiter > 0
+                                            ? (totalDistanceNumber / normalTravelKmPerLiter) * 1.1
+                                            : null;
 
-                                        const excess =
-                                            hasFuelUsed && totalLitersWithAllowance !== null
-                                                ? fuelUsedNumber - totalLitersWithAllowance
-                                                : null;
+                                        const excess = totalLitersWithAllowance !== null
+                                            ? fuelUsedNumber - totalLitersWithAllowance
+                                            : null;
 
                                         const firstRow = reportData[0] as any;
                                         const plateNo =
@@ -584,22 +621,12 @@ export default function FuelUsageSummary() {
                                                 <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{numberOfCylinder}</td>
                                                 <td className="text-foreground relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                     {start ?? ''}
-                                                    {isFromGasSlip(row) && (
-                                                        <div className="absolute top-1 right-1" title={`ODOMETER Beginning from Gas Slip #${row.gas_slip_document_no || 'N/A'} (Odometer Before field)`}>
-                                                            <Fuel className="w-3 h-3 text-blue-500" />
-                                                        </div>
-                                                    )}
                                                 </td>
                                                 <td className="text-foreground relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                     {end ?? ''}
-                                                    {isFromGasSlip(row) && (
-                                                        <div className="absolute top-1 right-1" title={`Reading Ending from Gas Slip #${row.gas_slip_document_no || 'N/A'} (Odometer After field)`}>
-                                                            <Fuel className="w-3 h-3 text-blue-500" />
-                                                        </div>
-                                                    )}
                                                 </td>
                                                 <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalDistanceNumber !== null ? totalDistanceNumber : ''}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{hasFuelUsed ? fuelUsedNumber.toFixed(2) : ''}</td>
+                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{fuelUsedNumber}</td>
                                                 <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{distancePerLiter !== null ? distancePerLiter.toFixed(2) : ''}</td>
                                                 <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{normalTravelKmPerLiter}</td>
                                                 <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalLitersWithAllowance !== null ? totalLitersWithAllowance.toFixed(2) : ''}</td>
@@ -665,7 +692,7 @@ export default function FuelUsageSummary() {
                                 </div>
                             </div>
                         </div>
-                        
+
                     </CardContent>
                 </Card>
                 {showReview && reportData.length > 0 && (

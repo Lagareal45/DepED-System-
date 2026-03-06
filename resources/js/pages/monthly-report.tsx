@@ -16,6 +16,10 @@ interface ReportData {
     date: string;
     distance_start: string | number;
     distance_end: string | number;
+    distance_traveled: number | null;
+    odometer_before: number | null;
+    odometer_after: number | null;
+    gasoline_consumed: number | null;
     oil_used: number;
     grease_used: string | number;
     remarks: string;
@@ -26,6 +30,7 @@ interface MonthlyReportResponse {
     driver: string;
     plate_no: string;
     report_date: string;
+    error?: string;
 }
 
 export default function MonthlyReport() {
@@ -74,10 +79,23 @@ export default function MonthlyReport() {
             });
 
             if (!res.ok) {
-                throw new Error('Failed to fetch monthly report data.');
+                const errorText = await res.text();
+                let errorMessage = 'Failed to fetch monthly report data.';
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    errorMessage = errorText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
             const result: MonthlyReportResponse = await res.json();
+
+            // Check for error in response
+            if (result.error) {
+                throw new Error(result.error);
+            }
             setReportData(result.data);
             setReportInfo({
                 driver: result.driver,
@@ -127,8 +145,8 @@ export default function MonthlyReport() {
                 <tr>
                     <td style="border: 1px dotted #000; padding: 8px; text-align: left; font-size: 10pt;">${dayData.day}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${formatDate(dayData.date)}</td>
-                    <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.distance_start || ''}</td>
-                    <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.distance_end || ''}</td>
+                    <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.odometer_before !== null && dayData.odometer_after !== null ? (dayData.odometer_after - dayData.odometer_before).toFixed(1) : (dayData.distance_traveled !== null ? dayData.distance_traveled.toFixed(1) : '')}</td>
+                    <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.grease_used || ''}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.remarks || ''}</td>
@@ -138,6 +156,8 @@ export default function MonthlyReport() {
 
         const totalOil = reportData.reduce((sum, item) => sum + (item.oil_used || 0), 0);
         const totalGrease = reportData.reduce((sum, item) => sum + (Number(item.grease_used) || 0), 0);
+        const totalDistance = reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0);
+        const totalGasoline = reportData.reduce((sum, item) => sum + (item.gasoline_consumed || 0), 0);
 
         return `
 <!DOCTYPE html>
@@ -152,7 +172,7 @@ export default function MonthlyReport() {
         .header { text-align: center; margin-bottom: 8px; position: relative; }
         .header .org { font-size: 9pt; margin: 0; line-height: 1.1; }
         .header .title { font-size: 12pt; font-weight: bold; margin: 4px 0 2px; letter-spacing: 0.5px; }
-        .appendix { position: absolute; top: 0; right: 0; font-size: 10pt; font-weight: bold; }
+        .appendix { position: absolute; top: -12px; right: 0; font-size: 10pt; font-weight: bold; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 10pt; }
         table { width: 100%; border-collapse: collapse; font-size: 10pt; border: 1px solid #000; }
         th { border: 1px solid #000; text-align: center; padding: 6px; font-size: 10pt; }
@@ -160,7 +180,10 @@ export default function MonthlyReport() {
         .totals-row td { border: 1px solid #000; font-weight: bold; }
         .cert { margin: 18px 0; font-size: 10pt; }
         .note { margin-top: 18px; font-size: 10pt; }
-        @media print { body { margin: 8px; } }
+        @media print { 
+            @page { margin: 0; }
+            body { margin: 1.5cm; }
+        }
     </style>
 </head>
 <body>
@@ -182,29 +205,31 @@ export default function MonthlyReport() {
                     ${reportInfo?.plate_no || ''}
                 </span>
             </div>
-            <div>
-                Date:
-                <span style="display: inline-block; min-width: 140px; border-bottom: 1px solid #000; margin-left: 4px; padding-bottom: 1px; text-align: left;">
-                    ${reportInfo?.report_date || ''}
-                </span>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div>
+                    Date:
+                    <span style="display: inline-block; min-width: 140px; border-bottom: 1px solid #000; margin-left: 4px; padding-bottom: 1px; text-align: left;">
+                        ${reportInfo?.report_date || ''}
+                    </span>
+                </div>
+                <div style="font-size: 10pt;">
+                    Driver's Name:
+                    <span style="display: inline-block; min-width: 180px; border-bottom: 1px solid #000; margin-left: 4px; padding-bottom: 1px; text-align: left;">
+                        ${reportInfo?.driver || ''}
+                    </span>
+                </div>
             </div>
-        </div>
-        <div style="margin-bottom: 12px; font-size: 10pt;">
-            Driver's Name:
-            <span style="display: inline-block; min-width: 180px; border-bottom: 1px solid #000; margin-left: 4px; padding-bottom: 1px; text-align: left;">
-                ${reportInfo?.driver || ''}
-            </span>
         </div>
 
         <table>
             <thead>
                 <tr>
                     <th style="width: 5%;"></th>
-                    <th style="width: 10%;">DATE</th>
-                    <th style="width: 18%;">Distance Traveled (in Kms.)</th>
-                    <th style="width: 18%;">Gasoline Consumed (in Liters)</th>
-                    <th style="width: 14%;">Oil Used (in Liters)</th>
-                    <th style="width: 12%;">Grease Used</th>
+                    <th style="width: 15%;">DATE</th>
+                    <th style="width: 17%;">Total Distance Travelled (A)</th>
+                    <th style="width: 20%;">Gasoline Consumed (in Liters)</th>
+                    <th style="width: 15%;">Oil Used (in Liters)</th>
+                    <th style="width: 15%;">Grease Used</th>
                     <th>REMARKS</th>
                 </tr>
             </thead>
@@ -213,8 +238,8 @@ export default function MonthlyReport() {
                 <tr class="totals-row">
                     <td>TOTALS:</td>
                     <td></td>
-                    <td></td>
-                    <td></td>
+                    <td style="text-align: center;">${totalDistance.toFixed(1)}</td>
+                    <td style="text-align: center;">${totalGasoline.toFixed(2)}</td>
                     <td style="text-align: center;">${totalOil.toFixed(2)}</td>
                     <td style="text-align: center;">${totalGrease.toFixed(2)}</td>
                     <td></td>
@@ -241,9 +266,9 @@ export default function MonthlyReport() {
             </div>
         </div>
 
-        <div class="note">
+        <div class="note" style="text-align: left;">
             <strong style="font-size: 10pt;">Note:</strong>
-            <div style="font-size: 10pt; margin-top: 4px; text-indent: 1.5em;">This report should be accomplished in triplicate the original of which, supported by the originals of duly accomplished Driver's Record of travel (Form A) should be submitted, thru the Administrative Officer or his equivalent to the auditor concerned.</div>
+            <div style="font-size: 10pt; margin-top: 4px; text-indent: 1.5em; text-align: justify;">This report should be accomplished in triplicate the original of which, supported by the originals of duly accomplished Driver's Record of travel (Form A) should be submitted, thru the Administrative Officer or his equivalent to the auditor concerned.</div>
         </div>
     </div>
 </body>
@@ -292,12 +317,10 @@ export default function MonthlyReport() {
                 )}
                 <div className="relative min-h-0 flex-1 overflow-y-auto rounded-xl border border-sidebar-border/70 bg-background/40 p-6">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Appendix F</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-foreground">
-                                <p className="text-foreground" style={{ textAlign: 'center', marginBottom: '4px', fontSize: '9pt', lineHeight: 1.1, margin: 0 }}>
+                        <CardContent className="pt-2">
+                            <div className="text-foreground relative" style={{ textAlign: 'center', marginTop: '0px' }}>
+                                <div className="absolute top-0 right-4 font-bold hidden sm:block text-sm">Appendix F</div>
+                                <p className="text-foreground pt-6" style={{ textAlign: 'center', marginBottom: '4px', fontSize: '9pt', lineHeight: 1.1, margin: 0 }}>
                                     Republic of the Philippines<br />
                                     Department of Education<br />
                                     <br />
@@ -323,47 +346,49 @@ export default function MonthlyReport() {
                                             {reportInfo?.plate_no || ''}
                                         </span>
                                     </div>
-                                    <div>
-                                        Date:
-                                        <span
-                                            style={{
-                                                display: 'inline-block',
-                                                minWidth: '140px',
-                                                borderBottom: '1px solid var(--border)',
-                                                marginLeft: '4px',
-                                                paddingBottom: '1px',
-                                                textAlign: 'left',
-                                            }}
-                                        >
-                                            {reportInfo?.report_date || ''}
-                                        </span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                        <div>
+                                            Date:
+                                            <span
+                                                style={{
+                                                    display: 'inline-block',
+                                                    minWidth: '140px',
+                                                    borderBottom: '1px solid var(--border)',
+                                                    marginLeft: '4px',
+                                                    paddingBottom: '1px',
+                                                    textAlign: 'left',
+                                                }}
+                                            >
+                                                {reportInfo?.report_date || ''}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            Driver's Name:
+                                            <span
+                                                style={{
+                                                    display: 'inline-block',
+                                                    minWidth: '180px',
+                                                    borderBottom: '1px solid var(--border)',
+                                                    marginLeft: '4px',
+                                                    paddingBottom: '1px',
+                                                    textAlign: 'left',
+                                                }}
+                                            >
+                                                {reportInfo?.driver || ''}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-foreground" style={{ marginBottom: '12px', fontSize: '10pt' }}>
-                                    Driver's Name:
-                                    <span
-                                        style={{
-                                            display: 'inline-block',
-                                            minWidth: '180px',
-                                            borderBottom: '1px solid var(--border)',
-                                            marginLeft: '4px',
-                                            paddingBottom: '1px',
-                                            textAlign: 'left',
-                                        }}
-                                    >
-                                        {reportInfo?.driver || ''}
-                                    </span>
                                 </div>
 
                                 <table className="border border-border" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt' }}>
                                     <thead>
                                         <tr>
                                             <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '5%', fontSize: '10pt' }}></th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>DATE</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '18%', fontSize: '10pt' }}>Distance Traveled (in Kms.)</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '18%', fontSize: '10pt' }}>Gasoline Consumed (in Liters)</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '14%', fontSize: '10pt' }}>   Oil Used (in Liters)</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '12%', fontSize: '10pt' }}>Grease Used</th>
+                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>DATE</th>
+                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '17%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
+                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '20%', fontSize: '10pt' }}>Gasoline Consumed (in Liters)</th>
+                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Oil Used (in Liters)</th>
+                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Grease Used</th>
                                             <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', fontSize: '10pt' }}>REMARKS</th>
                                         </tr>
                                     </thead>
@@ -374,8 +399,8 @@ export default function MonthlyReport() {
                                                     <tr key={`${dayData.day}-${index}`}>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{dayData.day}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{formatDate(dayData.date)}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.distance_start || ''}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.distance_end || ''}</td>
+                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? (dayData.odometer_after - dayData.odometer_before).toFixed(1) : (dayData.distance_traveled !== null ? dayData.distance_traveled.toFixed(1) : '')}</td>
+                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.grease_used || ''}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.remarks || ''}</td>
@@ -384,8 +409,12 @@ export default function MonthlyReport() {
                                                 <tr>
                                                     <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                        {reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0).toFixed(1)}
+                                                    </td>
+                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                        {reportData.reduce((sum, item) => sum + (item.gasoline_consumed || 0), 0).toFixed(2)}
+                                                    </td>
                                                     <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                         {reportData.reduce((sum, item) => sum + (item.oil_used || 0), 0).toFixed(2)}
                                                     </td>
@@ -446,9 +475,9 @@ export default function MonthlyReport() {
                                     </div>
                                 </div>
 
-                                <div className="text-foreground" style={{ marginTop: '18px', fontSize: '10pt' }}>
+                                <div className="text-foreground" style={{ marginTop: '18px', fontSize: '10pt', textAlign: 'left' }}>
                                     <strong style={{ fontSize: '10pt' }}>Note:</strong>
-                                    <div style={{ fontSize: '10pt', marginTop: '4px', textIndent: '1.5em' }}>This report should be accomplished in triplicate the original of which, supported by the originals of duly accomplished Driver's Record of travel (Form A) should be submitted, thru the Administrative Officer or his equivalent to the auditor concerned.</div>
+                                    <div style={{ fontSize: '10pt', marginTop: '4px', textIndent: '1.5em', textAlign: 'justify' }}>This report should be accomplished in triplicate the original of which, supported by the originals of duly accomplished Driver's Record of travel (Form A) should be submitted, thru the Administrative Officer or his equivalent to the auditor concerned.</div>
                                 </div>
                             </div>
                         </CardContent>

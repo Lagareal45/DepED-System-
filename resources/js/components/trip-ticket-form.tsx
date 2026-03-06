@@ -45,6 +45,8 @@ export function TripTicketForm() {
             passengerSignatures: '',
             authorizedByName: 'VICTORIA V. GAZO',
             authorizedByTitle: 'Schools Division Superintendent',
+            gasolineTotalLitres: '', // Added manually fillable total field
+            gasolineFinalBalance: '', // Added manually fillable balance field
         }),
         [],
     );
@@ -124,6 +126,15 @@ export function TripTicketForm() {
         return total - deducted;
     };
 
+    const calculateGasolineDeducted = () => {
+        const a = parseFloat(formData.gasolineBalanceInTank) || 0;
+        const c = parseFloat(formData.gasolinePurchased) || 0;
+        const f = parseFloat(formData.gasolineFinalBalance) || 0;
+        // Formula: a + c - f = e
+        const e = a + c - f;
+        return Math.max(0, e); // Return 0 if negative
+    };
+
     const handleReset = async () => {
         setSubmitError(null);
         setFormData(emptyForm);
@@ -146,6 +157,10 @@ export function TripTicketForm() {
             const xsrf = getCookie('XSRF-TOKEN');
             const xsrfDecoded = xsrf ? decodeURIComponent(xsrf) : '';
 
+            // Using manually entered values but falling back to formulas if they are empty
+            const totalGasoline = formData.gasolineTotalLitres ? Number(formData.gasolineTotalLitres) : null;
+            const finalBalance = formData.gasolineFinalBalance ? Number(formData.gasolineFinalBalance) : null;
+
             const payload = {
                 document_no: formData.documentNo || null,
                 date: formData.date || null,
@@ -165,7 +180,7 @@ export function TripTicketForm() {
                 gasoline_balance_in_tank: formData.gasolineBalanceInTank ? Number(formData.gasolineBalanceInTank) : null,
                 gasoline_issued: formData.gasolineIssued ? Number(formData.gasolineIssued) : null,
                 gasoline_purchased: formData.gasolinePurchased ? Number(formData.gasolinePurchased) : null,
-                gasoline_deducted: formData.gasolineDeducted ? Number(formData.gasolineDeducted) : null,
+                gasoline_deducted: calculateGasolineDeducted() > 0 ? calculateGasolineDeducted() : null,
 
                 gear_oil_used: formData.gearOilUsed ? Number(formData.gearOilUsed) : null,
                 lubricants_used: formData.lubricantsUsed ? Number(formData.lubricantsUsed) : null,
@@ -216,6 +231,8 @@ export function TripTicketForm() {
                     plateNo: formData.plateNo,
                     purpose: formData.purpose,
                     date: formData.date,
+                    speedAtBeginning: formData.speedAtBeginning,
+                    speedAtEnd: formData.speedAtEnd,
                 })
             );
 
@@ -230,7 +247,7 @@ export function TripTicketForm() {
         }
     };
 
-    
+
 
     const printOrSavePDF = () => {
         setDownloading(true);
@@ -316,15 +333,17 @@ export function TripTicketForm() {
         .driver-log .sub { list-style: lower-alpha; padding-left: 18px; margin-top: 2px; }
         .driver-log .sub li { margin: 2px 0; }
         .driver-log .inline { display: inline; }
-        .driver-log .value-inline { border-bottom: 1px solid #000; padding: 0 3px 0px; margin: 0 2px; min-width: 180px; display: inline-block; text-align: justify; font-size: 9pt; }
-        .pdf-input { border: none; border-bottom: 1px solid #000; padding: 0 3px; margin: 0 2px; min-width: 180px; font-size: 9pt; background: transparent; }
-        .remarks-box { border: 1px solid #000; min-height: 50px; padding: 4px; margin: 6px 0; text-align: justify; font-size: 9pt; }
+        .driver-log .value-inline { border-bottom: 1px solid #000; padding: 0 3px 0px; margin: 0 8px; min-width: 250px; display: inline-block; text-align: center; font-size: 10pt; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; }
+        .pdf-input { border: none; border-bottom: 1px solid #000; padding: 0 3px; margin: 0 8px; min-width: 250px; font-size: 10pt; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; outline: none; }
+        .remarks-box { min-height: 15px; padding: 2px 4px; margin: 2px 0; text-align: justify; font-size: 9pt; }
         .cert { margin: 8px 0; font-size: 9pt; }
         .cert .statement { margin-bottom: 4px; }
-        .cert .sig-line { border-bottom: 1px solid #000; width: 180px; height: 14px; margin-top: 2px; margin-bottom: 1px; }
-        .cert .sig-label { font-size: 9pt; }
+        .cert .sig-wrap { display: inline-block; text-align: center; margin-top: 2px; }
+        .cert .sig-line { border-bottom: 1px solid #000; min-width: 180px; padding: 0 4px; height: 14px; margin-bottom: 1px; white-space: nowrap; text-align: center; color: #000; }
+        .cert .sig-label { font-size: 9pt; margin-top: 2px; }
         .note { font-size: 9pt; color: #333; margin-top: 6px; }
-        @media print { body { margin: 8px; } }
+        @page { margin: 0; }
+        @media print { body { margin: 10mm; } }
     </style>
 </head>
 <body>
@@ -382,34 +401,160 @@ export function TripTicketForm() {
 
         <div class="driver-log">
             <div class="section-label">To be filled by the Driver</div>
-            <ol>
-                <li>Time for departure from the office/garage: <span class="value-inline">${formatTime(formData.departureTime)}</span></li>
-                <li>Time of arrival at place visited: <span class="value-inline">${formData.arrivalAtPlace ? formatTime(formData.arrivalAtPlace) : ''}</span></li>
-                <li>Time of departure from No.2 above: <span class="value-inline">${formData.departureFromPlace ? formatTime(formData.departureFromPlace) : ''}</span></li>
-                <li>Time of arrival back to office/garage: <span class="value-inline">${formData.arrivalBackTime ? formatTime(formData.arrivalBackTime) : ''}</span></li>
-                <li>Approximate distance travelled (to & fro): <span class="value-inline">${formData.distanceTravelled || ''}</span></li>
-                <li>Gasoline issued/purchased (Liters): <input id="totalGasoline" class="pdf-input" value="${formData.totalGasoline || ''}" />
-                    <ol class="sub">
-                        <li>Balance in tank <input id="gasolineBalanceInTank" class="pdf-input" value="${formData.gasolineBalanceInTank || ''}" /></li>
-                        <li>Issued by office/garage <input id="gasolineIssued" class="pdf-input" value="${formData.gasolineIssued || ''}" /></li>
-                        <li>Add: purchased during the trip <input id="gasolinePurchased" class="pdf-input" value="${formData.gasolinePurchased || ''}" /></li>
-                        <li>Total <input id="gasolineTotalCalc" class="pdf-input" value="${calculateGasolineTotal().toFixed(2)}" readonly /></li>
-                        <li>Deducted during trip <input id="gasolineDeducted" class="pdf-input" value="${formData.gasolineDeducted || ''}" /></li>
-                        <li>Balance in tank <input id="gasolineBalanceCalc" class="pdf-input" value="${calculateGasolineBalance().toFixed(2)}" readonly /></li>
-                    </ol>
-                </li>
-                <li>Gear oil used: <span class="value-inline">${formData.gearOilUsed || ''}</span> L</li>
-                <li>Lubricants used: <span class="value-inline">${formData.lubricantsUsed || ''}</span> L</li>
-                <li>Greased oil used: <span class="value-inline">${formData.greasedOilUsed || ''}</span> L</li>
-                <li>
-                    Speed: <span class="value-inline">${formData.speed || ''}</span>
-                    <div class="speed-lines">
-                        <div class="line-item">at the beginning of the trip: <span class="value-inline">${formData.speedAtBeginning || ''}</span></div>
-                        <div class="line-item">distance travelled (per distance above 5): <span class="value-inline">${formData.speedDistanceTravelled || ''}</span></div>
-                        <div class="line-item">at the end of the trip: <span class="value-inline">${formData.speedAtEnd || ''}</span></div>
-                    </div>
-                </li>
-            </ol>
+            <table style="width: 100%; border-collapse: collapse; font-size: 10pt; line-height: 1.5; margin-left: 10px;">
+                <tr>
+                    <td style="width: 25px; vertical-align: bottom;">1.</td>
+                    <td style="vertical-align: bottom;">Time for departure from the office/garage:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; width: 35%; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formatTime(formData.departureTime)}</span>
+                    </td>
+                    <td style="width: 80px; padding-left: 5px; vertical-align: bottom;"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">2.</td>
+                    <td style="vertical-align: bottom;">Time of arrival at place visited:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.arrivalAtPlace ? formatTime(formData.arrivalAtPlace) : ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">3.</td>
+                    <td style="vertical-align: bottom;">Time of departure from No. 2 above:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.departureFromPlace ? formatTime(formData.departureFromPlace) : ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">4.</td>
+                    <td style="vertical-align: bottom;">Time of arrival back to office/garage:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.arrivalBackTime ? formatTime(formData.arrivalBackTime) : ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">5.</td>
+                    <td style="vertical-align: bottom;">Approximate distance travelled (to and fro):</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.distanceTravelled || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">6.</td>
+                    <td style="vertical-align: bottom;">Gasoline issued/purchased (Liters):</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="totalGasoline" value="${formData.totalGasoline || ''}" style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;"></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;"><span style="display:inline-block; width:15px;">a.</span>Balance in tank</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="gasolineBalanceInTank" value="${formData.gasolineBalanceInTank || ''}" style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;"><span style="display:inline-block; width:15px;">b.</span>Issued by office/garage</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="gasolineIssued" value="${formData.gasolineIssued || ''}" style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;"><span style="display:inline-block; width:15px;">c.</span>Add: purchased during the trip</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="gasolinePurchased" value="${formData.gasolinePurchased || ''}" style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;"><span style="display:inline-block; width:15px;">d.</span>Total</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="gasolineTotalLitres" value="${formData.gasolineTotalLitres || ''}" style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;"><span style="display:inline-block; width:15px;">e.</span>Deducted during trip</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="gasolineDeductedCalc" value="${calculateGasolineDeducted() > 0 ? calculateGasolineDeducted().toFixed(2) : ''}" readonly style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;"><span style="display:inline-block; width:15px;">f.</span>Balance in tank</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <input id="gasolineFinalBalance" value="${formData.gasolineFinalBalance || ''}" style="width: 100%; border: none; background: transparent; text-align: center; color: #000080; font-family: 'Times New Roman', serif; font-style: italic; font-size: 10pt; outline: none;" />
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">7.</td>
+                    <td style="vertical-align: bottom;">Gear oil used:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.gearOilUsed || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Liters</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">8.</td>
+                    <td style="vertical-align: bottom;">Lubricants used:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.lubricantsUsed || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Miles/Kms</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">9.</td>
+                    <td style="vertical-align: bottom;">Greased oil used:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.greasedOilUsed || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Miles/Kms</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">10.</td>
+                    <td style="vertical-align: bottom;">Speed:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.speed || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Miles/Kms</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;">at the beginning of the trip:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.speedAtBeginning || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Miles/Kms</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;">distance travelled (per distance above 5):</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.speedDistanceTravelled || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Miles/Kms</td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;"></td>
+                    <td style="vertical-align: bottom; padding-left: 20px;">at the end of the trip:</td>
+                    <td style="border-bottom: 1px solid #000; text-align: center; vertical-align: bottom; height: 18px;">
+                        <span style="color: #000080; font-family: 'Times New Roman', serif; font-style: italic;">${formData.speedAtEnd || ''}</span>
+                    </td>
+                    <td style="padding-left: 5px; vertical-align: bottom;">Miles/Kms</td>
+                </tr>
+            </table>
         </div>
 
         <div><strong>REMARKS:</strong></div>
@@ -417,13 +562,17 @@ export function TripTicketForm() {
 
         <div class="cert">
             <div class="statement">I HEREBY CERTIFY to the correctness of the above statement of record travel.</div>
-            <div class="sig-line">${formData.driverSignature || formData.driver || ''}</div>
-            <div class="sig-label">Driver</div>
+            <div class="sig-wrap">
+                <div class="sig-line">${formData.driverSignature || formData.driver || ''}</div>
+                <div class="sig-label">Driver</div>
+            </div>
         </div>
         <div class="cert">
             <div class="statement">I/WE HEREBY CERTIFY that I/we used this service vehicle on official travel as stated above.</div>
-            <div class="sig-line">${formData.passengerSignatures || ''}</div>
-            <div class="sig-label">Passenger/s</div>
+            <div class="sig-wrap">
+                <div class="sig-line">${formData.authorizedPassengers || formData.passengerSignatures || ''}</div>
+                <div class="sig-label">Passenger/s</div>
+            </div>
         </div>
 
     </div>
@@ -432,14 +581,7 @@ export function TripTicketForm() {
             function q(id){return document.getElementById(id);}
             function parseNum(v){var n=parseFloat(v); return isNaN(n)?0:n;}
             function recalc(){
-                var issued = parseNum(q('gasolineIssued')?.value);
-                var purchased = parseNum(q('gasolinePurchased')?.value);
-                var deducted = parseNum(q('gasolineDeducted')?.value);
-                var total = issued + purchased;
-                var balance = total - deducted;
-                if(q('gasolineTotalCalc')) q('gasolineTotalCalc').value = total.toFixed(2);
-                if(q('gasolineBalanceCalc')) q('gasolineBalanceCalc').value = balance.toFixed(2);
-                if(q('totalGasoline')) q('totalGasoline').value = total.toFixed(2);
+                // No computation for total and balance in tank, pure user input.
             }
             ['gasolineIssued','gasolinePurchased','gasolineDeducted'].forEach(function(id){
                 var el = q(id);
@@ -596,7 +738,7 @@ export function TripTicketForm() {
                                 Add Another Destination
                             </Button>
                         </div>
-                        
+
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
@@ -784,40 +926,38 @@ export function TripTicketForm() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>d. Total(Liters)</Label>
+                                <Label htmlFor="gasolineTotalLitres">d. Total(Liters)</Label>
                                 <Input
+                                    id="gasolineTotalLitres"
                                     type="number"
                                     step="0.01"
-                                    value={calculateGasolineTotal().toFixed(2)}
-                                    readOnly
-                                    className="bg-muted"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="gasolineDeducted">
-                                    e. Deduct during trip(Liters)
-                                </Label>
-                                <Input
-                                    id="gasolineDeducted"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.gasolineDeducted}
-                                    onChange={(e) =>
-                                        handleChange('gasolineDeducted', e.target.value)
-                                    }
+                                    value={formData.gasolineTotalLitres}
+                                    onChange={(e) => handleChange('gasolineTotalLitres', e.target.value)}
                                     placeholder="0.00"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label>f. Balance in tank(Liters)</Label>
+                                <Label>e. Deduct during trip(Liters)</Label>
                                 <Input
                                     type="number"
                                     step="0.01"
-                                    value={calculateGasolineBalance().toFixed(2)}
+                                    value={calculateGasolineDeducted().toFixed(2)}
                                     readOnly
                                     className="bg-muted"
+                                />
+                                <p className="text-xs text-muted-foreground">Calculated as: (Balance + Purchased) - Final Balance</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="gasolineFinalBalance">f. Balance in tank(Liters)</Label>
+                                <Input
+                                    id="gasolineFinalBalance"
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.gasolineFinalBalance}
+                                    onChange={(e) => handleChange('gasolineFinalBalance', e.target.value)}
+                                    placeholder="0.00"
                                 />
                             </div>
                         </div>
@@ -943,25 +1083,33 @@ export function TripTicketForm() {
                         rows={4}
                     />
                     <p className="text-sm text-muted-foreground mb-4">
-                            I HEREBY CERTIFY to the correctness of the above statement of record travel.
+                        I HEREBY CERTIFY to the correctness of the above statement of record travel.
                     </p>
                 </CardContent>
             </Card>
 
             {/* Certification Section */}
-           <Card>
+            <Card>
                 <CardContent className="pt-6">
                     <div className="flex justify-end">
                         <div className="text-sm text-center">
-                            <p className="text-muted-foreground">
-                                {formData.driver ? formData.driver : '-----------------------'}
+                            <p className="text-muted-foreground border-b border-muted-foreground min-w-[200px] inline-block px-4 pb-1">
+                                {formData.driver || '\u00A0'}
                             </p>
-                            <p className="text-muted-foreground">Driver</p>
+                            <p className="text-muted-foreground mt-1">Driver</p>
                         </div>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
-                            I/WE HEREBY CERTIFY that I/we used this service vehicle on official travel as stated above.
-                        </p>
+                        I/WE HEREBY CERTIFY that I/we used this service vehicle on official travel as stated above.
+                    </p>
+                    <div className="flex justify-end">
+                        <div className="text-sm text-center">
+                            <p className="text-muted-foreground border-b border-muted-foreground min-w-[200px] inline-block px-4 pb-1">
+                                {formData.authorizedPassengers || '\u00A0'}
+                            </p>
+                            <p className="text-muted-foreground mt-1">Passenger/s</p>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 

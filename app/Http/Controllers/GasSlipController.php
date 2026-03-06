@@ -21,9 +21,7 @@ class GasSlipController extends Controller
     public function getByDocumentNo(Request $request, $documentNo)
     {
         $user = $request->user();
-        
         $gasSlip = GasSlip::where('document_no', $documentNo)
-            ->where('user_id', $user->id)
             ->first();
 
         if (!$gasSlip) {
@@ -41,15 +39,6 @@ class GasSlipController extends Controller
             'document_no' => [
                 'required',
                 'string',
-                // Allow same document_no for current user's gas slip (for updateOrCreate)
-                function ($attribute, $value, $fail) use ($user) {
-                    $exists = GasSlip::where('document_no', $value)
-                        ->where('user_id', '!=', $user->id)
-                        ->exists();
-                    if ($exists) {
-                        $fail('The document no has already been taken.');
-                    }
-                },
             ],
             'date' => ['nullable', 'date'],
             'driver' => ['nullable', 'string', 'max:255'],
@@ -70,12 +59,16 @@ class GasSlipController extends Controller
             // Use updateOrCreate to handle both new gas slips and updates to existing ones
             // If a gas slip with this document_no already exists (from trip ticket), update it
             // Otherwise, create a new one
+            $updateData = $data;
+            if (!GasSlip::where('document_no', $data['document_no'])->exists()) {
+                $updateData['user_id'] = $user->id;
+            }
+
             return GasSlip::updateOrCreate(
                 [
                     'document_no' => $data['document_no'],
-                    'user_id' => $user->id,
                 ],
-                $data
+                $updateData
             );
         });
 
@@ -83,5 +76,86 @@ class GasSlipController extends Controller
             'id' => $gasSlip->id,
             'document_no' => $gasSlip->document_no,
         ], 201);
+    }
+
+    // Search gas slips with filters
+    public function search(Request $request)
+    {
+        $user = $request->user();
+        
+        $query = GasSlip::query();
+        
+        // Filter by date range
+        if ($request->has('start_date')) {
+            $query->where('date', '>=', $request->start_date);
+        }
+        if ($request->has('end_date')) {
+            $query->where('date', '<=', $request->end_date);
+        }
+        
+        // Filter by vehicle type
+        if ($request->has('vehicle_type')) {
+            $query->where('vehicle_type', $request->vehicle_type);
+        }
+        
+        // Filter by plate number
+        if ($request->has('plate_no')) {
+            $query->where('plate_no', $request->plate_no);
+        }
+        
+        // Filter by single date
+        if ($request->has('date')) {
+            $query->where('date', $request->date);
+        }
+        
+        $gasSlips = $query->orderBy('date', 'desc')->get();
+        
+        return response()->json(['data' => $gasSlips]);
+    }
+
+    // Get gas slips for a specific month
+    public function monthly(Request $request)
+    {
+        $user = $request->user();
+        
+        $year = $request->year;
+        $month = $request->month;
+        
+        $query = GasSlip::whereYear('date', $year)
+            ->whereMonth('date', $month);
+        
+        // Filter by vehicle type if provided
+        if ($request->has('vehicle_type')) {
+            $query->where('vehicle_type', $request->vehicle_type);
+        }
+        
+        $gasSlips = $query->orderBy('date', 'asc')->get();
+        
+        return response()->json(['data' => $gasSlips]);
+    }
+
+    // Get latest odometer reading for a vehicle
+    public function latestOdometer(Request $request)
+    {
+        $user = $request->user();
+        
+        $query = GasSlip::query();
+        
+        // Filter by vehicle type if provided
+        if ($request->has('vehicle_type')) {
+            $query->where('vehicle_type', $request->vehicle_type);
+        }
+        
+        // Filter by plate number if provided
+        if ($request->has('plate_no')) {
+            $query->where('plate_no', $request->plate_no);
+        }
+        
+        $gasSlip = $query->orderBy('date', 'desc')->first();
+        
+        return response()->json([
+            'odometer_after' => $gasSlip ? $gasSlip->odometer_after : null,
+            'odometer_before' => $gasSlip ? $gasSlip->odometer_before : null,
+        ]);
     }
 }

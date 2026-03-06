@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\TripTicketController;
 use App\Http\Controllers\GasSlipController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -37,10 +38,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('trip-tickets/next-number', [TripTicketController::class, 'nextNumber'])->name('trip-tickets.next-number');
     Route::post('trip-tickets', [TripTicketController::class, 'store'])->name('trip-tickets.store');
     Route::get('trip-tickets/monthly-report', [TripTicketController::class, 'monthlyReport'])->name('trip-tickets.monthly-report');
-
+    
     Route::get('gas-slips/next-number', [GasSlipController::class, 'nextNumber'])->name('gas-slips.next-number');
+    Route::get('gas-slips/search', [GasSlipController::class, 'search'])->name('gas-slips.search');
+    Route::get('gas-slips/monthly', [GasSlipController::class, 'monthly'])->name('gas-slips.monthly');
+    Route::get('gas-slips/latest-odometer', [GasSlipController::class, 'latestOdometer'])->name('gas-slips.latest-odometer');
     Route::get('gas-slips/{documentNo}', [GasSlipController::class, 'getByDocumentNo'])->name('gas-slips.getByDocumentNo');
     Route::post('gas-slips', [GasSlipController::class, 'store'])->name('gas-slips.store');
+    
+    // Dashboard Data API
+    Route::get('api/dashboard/data', [DashboardController::class, 'getData'])->name('api.dashboard.data');
 });
 
 require __DIR__.'/settings.php';

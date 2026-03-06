@@ -3,26 +3,26 @@ import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, ShoppingCart, Eye, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { FileText, FileSpreadsheet, Car, Droplet, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {   
+    {
         title: 'Dashboard',
         href: dashboard().url,
     },
 ];
 
 export default function Dashboard() {
-    const { 
-        metrics, 
-        monthlyData, 
-        trafficSources, 
-        trafficSourcesList, 
-        monthlyGoals, 
-        loading, 
-        error, 
-        refreshData 
+    const {
+        metrics,
+        monthlyData,
+        trafficSources,
+        trafficSourcesList,
+        monthlyGoals,
+        loading,
+        error,
+        refreshData
     } = useDashboardData();
 
     if (loading) {
@@ -45,7 +45,7 @@ export default function Dashboard() {
                 <div className="flex min-h-0 flex-1 flex-col gap-6 rounded-xl p-6">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                         <p className="text-red-800">Error loading dashboard: {error}</p>
-                        <button 
+                        <button
                             onClick={refreshData}
                             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                         >
@@ -63,11 +63,10 @@ export default function Dashboard() {
 
             <div className="flex min-h-0 flex-1 flex-col gap-6 rounded-xl p-6">
                 {/* Header with refresh button */}
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <div className="flex justify-end items-center">
                     <button
                         onClick={refreshData}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-gray-100 transition-colors"
                     >
                         <RefreshCw className="w-4 h-4" />
                         Refresh
@@ -79,21 +78,21 @@ export default function Dashboard() {
                     <div className="bg-white rounded-lg shadow p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Total Revenue</p>
-                                <p className="text-2xl font-bold text-gray-900">${metrics?.totalRevenue.toLocaleString()}</p>
+                                <p className="text-sm text-gray-600">Total Trip Tickets</p>
+                                <p className="text-2xl font-bold text-gray-900">{metrics?.totalTripTickets.toLocaleString()}</p>
                                 <div className="flex items-center mt-2">
-                                    {metrics?.revenueChange && metrics.revenueChange > 0 ? (
+                                    {metrics?.tripsChange && metrics.tripsChange > 0 ? (
                                         <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
                                     ) : (
                                         <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
                                     )}
-                                    <span className={`text-sm ${metrics?.revenueChange && metrics.revenueChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                        {Math.abs(metrics?.revenueChange || 0)}%
+                                    <span className={`text-sm ${metrics?.tripsChange && metrics.tripsChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                        {Math.abs(metrics?.tripsChange || 0)}%
                                     </span>
                                 </div>
                             </div>
                             <div className="bg-purple-100 p-3 rounded-lg">
-                                <TrendingUp className="w-6 h-6 text-purple-600" />
+                                <FileText className="w-6 h-6 text-purple-600" />
                             </div>
                         </div>
                     </div>
@@ -101,21 +100,21 @@ export default function Dashboard() {
                     <div className="bg-white rounded-lg shadow p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Active Users</p>
-                                <p className="text-2xl font-bold text-gray-900">{metrics?.activeUsers.toLocaleString()}</p>
+                                <p className="text-sm text-gray-600">Total Gas Slips</p>
+                                <p className="text-2xl font-bold text-gray-900">{metrics?.totalGasSlips.toLocaleString()}</p>
                                 <div className="flex items-center mt-2">
-                                    {metrics?.usersChange && metrics.usersChange > 0 ? (
+                                    {metrics?.gasSlipsChange && metrics.gasSlipsChange > 0 ? (
                                         <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
                                     ) : (
                                         <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
                                     )}
-                                    <span className={`text-sm ${metrics?.usersChange && metrics.usersChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                        {Math.abs(metrics?.usersChange || 0)}%
+                                    <span className={`text-sm ${metrics?.gasSlipsChange && metrics.gasSlipsChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                        {Math.abs(metrics?.gasSlipsChange || 0)}%
                                     </span>
                                 </div>
                             </div>
                             <div className="bg-blue-100 p-3 rounded-lg">
-                                <Users className="w-6 h-6 text-blue-600" />
+                                <FileSpreadsheet className="w-6 h-6 text-blue-600" />
                             </div>
                         </div>
                     </div>
@@ -123,21 +122,21 @@ export default function Dashboard() {
                     <div className="bg-white rounded-lg shadow p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Total Orders</p>
-                                <p className="text-2xl font-bold text-gray-900">{metrics?.totalOrders.toLocaleString()}</p>
+                                <p className="text-sm text-gray-600">Total Vehicles</p>
+                                <p className="text-2xl font-bold text-gray-900">{metrics?.totalVehicles.toLocaleString()}</p>
                                 <div className="flex items-center mt-2">
-                                    {metrics?.ordersChange && metrics.ordersChange > 0 ? (
+                                    {metrics?.vehiclesChange && metrics.vehiclesChange > 0 ? (
                                         <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
                                     ) : (
                                         <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
                                     )}
-                                    <span className={`text-sm ${metrics?.ordersChange && metrics.ordersChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                        {Math.abs(metrics?.ordersChange || 0)}%
+                                    <span className={`text-sm ${metrics?.vehiclesChange && metrics.vehiclesChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                        {Math.abs(metrics?.vehiclesChange || 0)}%
                                     </span>
                                 </div>
                             </div>
                             <div className="bg-green-100 p-3 rounded-lg">
-                                <ShoppingCart className="w-6 h-6 text-green-600" />
+                                <Car className="w-6 h-6 text-green-600" />
                             </div>
                         </div>
                     </div>
@@ -145,21 +144,21 @@ export default function Dashboard() {
                     <div className="bg-white rounded-lg shadow p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-600">Page Views</p>
-                                <p className="text-2xl font-bold text-gray-900">{metrics?.pageViews.toLocaleString()}</p>
+                                <p className="text-sm text-gray-600">Total Fuel Consumed (Liters)</p>
+                                <p className="text-2xl font-bold text-gray-900">{metrics?.totalFuelConsumed.toLocaleString()}</p>
                                 <div className="flex items-center mt-2">
-                                    {metrics?.viewsChange && metrics.viewsChange > 0 ? (
+                                    {metrics?.fuelChange && metrics.fuelChange > 0 ? (
                                         <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
                                     ) : (
                                         <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
                                     )}
-                                    <span className={`text-sm ${metrics?.viewsChange && metrics.viewsChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                        {Math.abs(metrics?.viewsChange || 0)}%
+                                    <span className={`text-sm ${metrics?.fuelChange && metrics.fuelChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                        {Math.abs(metrics?.fuelChange || 0)}%
                                     </span>
                                 </div>
                             </div>
                             <div className="bg-amber-100 p-3 rounded-lg">
-                                <Eye className="w-6 h-6 text-amber-600" />
+                                <Droplet className="w-6 h-6 text-amber-600" />
                             </div>
                         </div>
                     </div>
@@ -176,15 +175,15 @@ export default function Dashboard() {
                                 <XAxis dataKey="month" />
                                 <YAxis />
                                 <Tooltip />
-                                <Line type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} name="Revenue" />
-                                <Line type="monotone" dataKey="orders" stroke="#3b82f6" strokeWidth={2} name="Orders" />
+                                <Line type="monotone" dataKey="trips" stroke="#8b5cf6" strokeWidth={2} name="Trips" />
+                                <Line type="monotone" dataKey="fuel" stroke="#3b82f6" strokeWidth={2} name="Fuel (Liters)" />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
 
-                    {/* Traffic Sources */}
+                    {/* Fuel Types Distribution */}
                     <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Traffic Sources</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Fuel Types</h2>
                         <ResponsiveContainer width="100%" height={200}>
                             <PieChart>
                                 <Pie
@@ -207,7 +206,7 @@ export default function Dashboard() {
                             {trafficSourcesList.map((source, index) => (
                                 <div key={index} className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        <div 
+                                        <div
                                             className="w-3 h-3 rounded-full mr-2"
                                             style={{ backgroundColor: trafficSources[index]?.color }}
                                         />
@@ -236,16 +235,16 @@ export default function Dashboard() {
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm text-gray-600">{goal.title}</span>
                                     <span className="text-sm font-medium text-gray-900">
-                                        {goal.title === 'Conversion Rate' 
-                                            ? `${goal.current}%` 
+                                        {goal.title === 'Conversion Rate'
+                                            ? `${goal.current}%`
                                             : goal.title === 'New Customers'
-                                            ? goal.current.toLocaleString()
-                                            : `$${goal.current.toLocaleString()}`
+                                                ? goal.current.toLocaleString()
+                                                : `₱${goal.current.toLocaleString()}`
                                         }
                                     </span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
+                                    <div
                                         className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
                                         style={{ width: `${goal.percentage}%` }}
                                     />
@@ -253,11 +252,11 @@ export default function Dashboard() {
                                 <div className="flex justify-between items-center mt-1">
                                     <span className="text-xs text-gray-500">{goal.percentage}%</span>
                                     <span className="text-xs text-gray-500">
-                                        Target: {goal.title === 'Conversion Rate' 
-                                            ? `${goal.target}%` 
+                                        Target: {goal.title === 'Conversion Rate'
+                                            ? `${goal.target}%`
                                             : goal.title === 'New Customers'
-                                            ? goal.target.toLocaleString()
-                                            : `$${goal.target.toLocaleString()}`
+                                                ? goal.target.toLocaleString()
+                                                : `₱${goal.target.toLocaleString()}`
                                         }
                                     </span>
                                 </div>
@@ -269,4 +268,3 @@ export default function Dashboard() {
         </AppLayout>
     );
 }
- 

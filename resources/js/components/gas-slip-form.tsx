@@ -121,6 +121,8 @@ export function GasSlipForm() {
                             plateNo: tripTicketData.plateNo || '',
                             purpose: tripTicketData.purpose || '',
                             date: tripTicketData.date || '',
+                            odometerBefore: tripTicketData.speedAtBeginning || '',
+                            odometerAfter: tripTicketData.speedAtEnd || '',
                         }));
                         // Fetch the existing gas slip record to get any additional data
                         try {
@@ -188,7 +190,7 @@ export function GasSlipForm() {
                                 date: gasSlipData.date || prev.date,
                             }));
                         }
-                    } catch (fetchErr) {}
+                    } catch (fetchErr) { }
                 }
             }
             // If we did not use a trip ticket document number, fetch the next slip number
@@ -343,7 +345,10 @@ export function GasSlipForm() {
         * { box-sizing: border-box; }
         body { font-family: 'Times New Roman', serif; font-size: 11pt; margin: 12px; line-height: 1.2; color: #000; }
         .container { display: flex; justify-content: space-between; gap: 12px; }
-        @media print { body { margin: 8px; } }
+        @media print {
+            @page { margin: 0; }
+            body { margin: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -362,7 +367,7 @@ export function GasSlipForm() {
             {formData.driver && (
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950">
                     <p className="text-sm text-blue-900 dark:text-blue-100">
-                        <strong>Note:</strong> This form has been pre-filled with data from your Trip Ticket ({formData.documentNo}). 
+                        <strong>Note:</strong> This form has been pre-filled with data from your Trip Ticket ({formData.documentNo}).
                         You can modify any field as needed.
                     </p>
                 </div>
