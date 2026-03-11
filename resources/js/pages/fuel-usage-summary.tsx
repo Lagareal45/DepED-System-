@@ -1,22 +1,22 @@
+import { Search, Calendar, Printer, Fuel } from 'lucide-react';
 import React, { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
+import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Search, Calendar, Printer, Fuel } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 import { gasSlipService } from '@/services/gas-slip-service';
 
 interface ReportRow {
     day: number | null;
     date: string;
     // Odometer / distance fields (from gas slip / aggregation)
-    distance_start?: string | number;
-    distance_end?: string | number;
-    odometer_before?: string | number;
-    odometer_after?: string | number;
+    distance_start?: string | number | null;
+    distance_end?: string | number | null;
+    odometer_before?: string | number | null;
+    odometer_after?: string | number | null;
     // Trip ticket specific fields
-    speed_at_beginning?: string | number;
-    speed_at_end?: string | number;
+    speed_at_beginning?: string | number | null;
+    speed_at_end?: string | number | null;
     // Fuel / oil usage
     oil_used?: number;
     grease_used?: string | number;
@@ -28,6 +28,21 @@ interface ReportRow {
     vehicle?: string;
     total_fuel_used?: number | string;
     total_liters?: number | string;
+    from_gas_slip?: boolean;
+    gas_slip_document_no?: string;
+    number_of_cylinders?: string | number;
+}
+
+interface GasSlipData {
+    document_no?: string;
+    date?: string;
+    odometer_before?: number | null;
+    odometer_after?: number | null;
+    vehicle_type?: string;
+    vehicle?: string;
+    plate_no?: string;
+    liters?: number | null;
+    number_of_cylinder?: string | number | null;
 }
 
 interface ReportInfo {
@@ -48,11 +63,10 @@ export default function FuelUsageSummary() {
     const [error, setError] = useState<string | null>(null);
     const [showReview, setShowReview] = useState(false);
     const [downloading, setDownloading] = useState(false);
-    const [preparedByName, setPreparedByName] = useState('Jane Rose S. Payot');
+    const [preparedByName, setPreparedByName] = useState('JANE ROSE S. PAYOT');
     const [preparedByPosition, setPreparedByPosition] = useState('Administrative Assistant III');
-    const [preparedBy, setPreparedBy] = useState({ name: 'Jane Rose S. Payot', position: 'Administrative Assistant III' });
     const [verifiedBy, setVerifiedBy] = useState({ name: 'KATHLEEN ANN T. DUMAS', position: 'Administrative Officer V' });
-    const [gasSlipData, setGasSlipData] = useState<any[]>([]);
+    const [gasSlipData, setGasSlipData] = useState<GasSlipData[]>([]);
 
     const getCookie = (name: string) => {
         const match = document.cookie
@@ -70,7 +84,7 @@ export default function FuelUsageSummary() {
             const n = Number(cleaned);
             return Number.isFinite(n) ? n : null;
         }
-        const n = Number(value as any);
+        const n = Number(value as string | number);
         return Number.isFinite(n) ? n : null;
     };
 
@@ -86,7 +100,7 @@ export default function FuelUsageSummary() {
             const m = trimmed.match(/^\d{4}-\d{2}-\d{2}/);
             if (m) return trimmed.slice(0, 10);
         }
-        const d = new Date(value as any);
+        const d = new Date(value as string | number | Date);
         if (Number.isNaN(d.getTime())) return '';
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -141,7 +155,7 @@ export default function FuelUsageSummary() {
     };
 
     // Merge trip ticket data with gas slip odometer readings
-    const mergeDataWithGasSlips = (tripTicketData: ReportRow[], gasSlips: any[]) => {
+    const mergeDataWithGasSlips = (tripTicketData: ReportRow[], gasSlips: GasSlipData[]) => {
         console.log('=== 🔥 MERGE DEBUG START ===');
         console.log('🔥 TRIP TICKET ROWS:', tripTicketData.length);
         console.log('🔥 GAS SLIPS FOUND:', gasSlips.length);
@@ -222,7 +236,7 @@ export default function FuelUsageSummary() {
     };
 
     // Ensure gas slip data takes priority explicitly prioritizing odometer_before / odometer_after
-    const getOdometerValue = (row: any, type: 'start' | 'end') => {
+    const getOdometerValue = (row: ReportRow, type: 'start' | 'end') => {
         // We always want to prioritize Gas Slip's "odometer_before" and "odometer_after"
         const gasSlipVal = type === 'start' ? row.odometer_before : row.odometer_after;
         const mappedGasSlipVal = toNumberOrNull(gasSlipVal);
@@ -237,19 +251,6 @@ export default function FuelUsageSummary() {
             : (row.distance_end ?? row.speed_at_end);
 
         return toNumberOrNull(fallbackRaw);
-    };
-
-    // Check if a row's odometer data comes from gas slip
-    const isFromGasSlip = (row: any) => {
-        return row.from_gas_slip ||
-            gasSlipData.some(gasSlip => {
-                const gasSlipDate = new Date(gasSlip.date).toDateString();
-                const rowDate = new Date(row.date).toDateString();
-                return gasSlipDate === rowDate &&
-                    (gasSlip.vehicle_type === row.vehicle_type ||
-                        gasSlip.vehicle_type === row.vehicle ||
-                        gasSlip.plate_no === row.plate_no);
-            });
     };
 
     const handleGenerate = async () => {
@@ -339,7 +340,7 @@ export default function FuelUsageSummary() {
                 }
                 return m ? m.toUpperCase() : '________';
             })();
-            const tableRows = reportData.map((row, idx) => {
+            const tableRows = reportData.map((row) => {
                 const startVal = getOdometerValue(row, 'start');
                 const endVal = getOdometerValue(row, 'end');
                 const start = startVal !== null ? startVal : '';
@@ -460,7 +461,7 @@ export default function FuelUsageSummary() {
                 printWindow.print();
                 printWindow.onafterprint = () => printWindow.close();
             }, 300);
-        } catch (err) {
+        } catch {
             setError('Failed to open print dialog.');
         } finally {
             setDownloading(false);
@@ -558,7 +559,7 @@ export default function FuelUsageSummary() {
                             <tbody>
                                 {reportData && reportData.length > 0 ? (
                                     reportData.map((item, idx) => {
-                                        const row = item as any;
+                                        const row = item;
 
                                         // Debug logging for each row
                                         console.log(`Row ${idx} data:`, {
@@ -595,7 +596,7 @@ export default function FuelUsageSummary() {
                                             ? fuelUsedNumber - totalLitersWithAllowance
                                             : null;
 
-                                        const firstRow = reportData[0] as any;
+                                        const firstRow = reportData[0] || {};
                                         const plateNo =
                                             row.plate_no ||
                                             reportInfo?.plate_no ||

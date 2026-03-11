@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, Calendar, FileText, Folder, LayoutGrid, Fuel, BarChart2 } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, Calendar, FileText, Folder, LayoutGrid, Fuel, BarChart2, ShieldCheck } from 'lucide-react';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -58,6 +58,16 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as unknown as { auth: { user: { is_admin: boolean } } };
+
+    const adminNavItems: NavItem[] = auth?.user?.is_admin ? [
+        {
+            title: 'Admin Dashboard',
+            href: '/admin/users',
+            icon: ShieldCheck,
+        }
+    ] : [];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -73,7 +83,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={[...mainNavItems, ...adminNavItems]} />
             </SidebarContent>
 
             <SidebarFooter>

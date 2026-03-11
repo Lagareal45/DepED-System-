@@ -6,6 +6,7 @@ use Laravel\Fortify\Features;
 use App\Http\Controllers\TripTicketController;
 use App\Http\Controllers\GasSlipController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -48,6 +49,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Dashboard Data API
     Route::get('api/dashboard/data', [DashboardController::class, 'getData'])->name('api.dashboard.data');
+});
+
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(function () {
+    Route::get('users', [AdminController::class, 'users'])->name('admin.users');
+    Route::post('users/{user}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
+    Route::delete('users/{user}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
 });
 
 require __DIR__.'/settings.php';

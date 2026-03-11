@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { TripTicketForm } from '@/components/trip-ticket-form';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [

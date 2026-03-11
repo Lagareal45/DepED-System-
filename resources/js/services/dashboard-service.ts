@@ -16,6 +16,9 @@ export interface MonthlyData {
     month: string;
     trips: number;
     fuel: number;
+    gasoline?: number;
+    diesel?: number;
+    unknown_fuel?: number;
 }
 
 export interface TrafficSource {

@@ -1,0 +1,46 @@
+﻿
+> lint
+> eslint . --fix
+
+
+C:\Users\lagar\OneDrive\Desktop\deped\TripTicket\resources\js\components\app-sidebar.tsx
+  61:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\lagar\OneDrive\Desktop\deped\TripTicket\resources\js\components\gas-slip-form.tsx
+    4:52  error  'CardDescription' is defined but never used          @typescript-eslint/no-unused-vars
+   91:11  error  'calculateTotal' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  151:34  error  'fetchErr' is defined but never used                 @typescript-eslint/no-unused-vars
+  157:26  error  'e' is defined but never used                        @typescript-eslint/no-unused-vars
+  193:30  error  'fetchErr' is defined but never used                 @typescript-eslint/no-unused-vars
+  193:40  error  Empty block statement                                no-empty
+  271:18  error  'err' is defined but never used                      @typescript-eslint/no-unused-vars
+
+C:\Users\lagar\OneDrive\Desktop\deped\TripTicket\resources\js\components\trip-ticket-form.tsx
+  123:11  error  'calculateGasolineBalance' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  161:19  error  'totalGasoline' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  162:19  error  'finalBalance' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  269:18  error  'err' is defined but never used                                @typescript-eslint/no-unused-vars
+
+C:\Users\lagar\OneDrive\Desktop\deped\TripTicket\resources\js\pages\admin\users.tsx
+  2:23  error  'UserX' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\lagar\OneDrive\Desktop\deped\TripTicket\resources\js\pages\fuel-usage-summary.tsx
+   53:12  error  'preparedBy' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   53:24  error  'setPreparedBy' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   55:52  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+   73:35  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+   89:37  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  144:75  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  225:36  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  243:11  error  'isFromGasSlip' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  243:33  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  342:52  error  'idx' is defined but never used                     @typescript-eslint/no-unused-vars
+  463:18  error  'err' is defined but never used                     @typescript-eslint/no-unused-vars
+  561:61  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  598:75  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+C:\Users\lagar\OneDrive\Desktop\deped\TripTicket\resources\js\pages\monthly-report.tsx
+  135:18  error  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 27 problems (27 errors, 0 warnings)
+

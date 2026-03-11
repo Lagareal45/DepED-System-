@@ -1,9 +1,9 @@
+import { Printer, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Printer, X } from 'lucide-react';
 
 export function GasSlipForm() {
     const emptyForm = useMemo(
@@ -88,10 +88,6 @@ export function GasSlipForm() {
         }
     };
 
-    const calculateTotal = () => {
-        return parseFloat(formData.amount) || 0;
-    };
-
     const handleReset = async () => {
         setSubmitError(null);
         setFormData(emptyForm);
@@ -106,7 +102,7 @@ export function GasSlipForm() {
         const initializeForm = async () => {
             // Check for pre-filled data from trip ticket
             let docNo = '';
-            let tripTicketDataStr = sessionStorage.getItem('lastTripTicketData');
+            const tripTicketDataStr = sessionStorage.getItem('lastTripTicketData');
             let usedTripTicketDocNo = false;
             if (tripTicketDataStr) {
                 try {
@@ -120,7 +116,7 @@ export function GasSlipForm() {
                             driver: tripTicketData.driver || '',
                             plateNo: tripTicketData.plateNo || '',
                             purpose: tripTicketData.purpose || '',
-                            date: tripTicketData.date || '',
+                            date: tripTicketData.date ? tripTicketData.date.split('T')[0] : '',
                             odometerBefore: tripTicketData.speedAtBeginning || '',
                             odometerAfter: tripTicketData.speedAtEnd || '',
                         }));
@@ -145,16 +141,18 @@ export function GasSlipForm() {
                                     fuelType: gasSlipData.fuel_type || prev.fuelType,
                                     liters: gasSlipData.liters?.toString() || prev.liters,
                                     amount: gasSlipData.amount?.toString() || prev.amount,
-                                    date: gasSlipData.date || prev.date,
+                                    date: gasSlipData.date ? gasSlipData.date.split('T')[0] : prev.date,
+                                    dateOfTravelStart: gasSlipData.date_of_travel_start ? gasSlipData.date_of_travel_start.split('T')[0] : prev.dateOfTravelStart,
+                                    dateOfTravelEnd: gasSlipData.date_of_travel_end ? gasSlipData.date_of_travel_end.split('T')[0] : prev.dateOfTravelEnd,
                                 }));
                             }
-                        } catch (fetchErr) {
+                        } catch {
                             // Gas slip might not exist yet, continue with pre-filled data
                         }
                     }
                     // Clear the session data so it's not reused
                     sessionStorage.removeItem('lastTripTicketData');
-                } catch (e) {
+                } catch {
                     // If parsing fails, ignore and fetch next number
                 }
             }
@@ -187,10 +185,12 @@ export function GasSlipForm() {
                                 fuelType: gasSlipData.fuel_type || prev.fuelType,
                                 liters: gasSlipData.liters?.toString() || prev.liters,
                                 amount: gasSlipData.amount?.toString() || prev.amount,
-                                date: gasSlipData.date || prev.date,
+                                date: gasSlipData.date ? gasSlipData.date.split('T')[0] : prev.date,
+                                dateOfTravelStart: gasSlipData.date_of_travel_start ? gasSlipData.date_of_travel_start.split('T')[0] : prev.dateOfTravelStart,
+                                dateOfTravelEnd: gasSlipData.date_of_travel_end ? gasSlipData.date_of_travel_end.split('T')[0] : prev.dateOfTravelEnd,
                             }));
                         }
-                    } catch (fetchErr) { }
+                    } catch { /* ignore */ }
                 }
             }
             // If we did not use a trip ticket document number, fetch the next slip number
@@ -199,7 +199,7 @@ export function GasSlipForm() {
             }
         };
         initializeForm();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     const submitToServer = async () => {
@@ -268,7 +268,7 @@ export function GasSlipForm() {
                 printWindow.print();
                 printWindow.onafterprint = () => printWindow.close();
             }, 300);
-        } catch (err) {
+        } catch {
             setSubmitError('Failed to open print dialog.');
         } finally {
             setDownloading(false);

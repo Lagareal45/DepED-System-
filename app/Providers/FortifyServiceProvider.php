@@ -12,6 +12,11 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Contracts\RegisterResponse;
+use Illuminate\Support\Facades\Auth;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -28,6 +33,19 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->singleton(RegisterResponse::class, function () {
+            return new class implements RegisterResponse {
+                public function toResponse($request)
+                {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return redirect()->route('login')->with('status', __('Your account has been registered and is pending administrator approval.'));
+                }
+            };
+        });
+
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
@@ -40,6 +58,22 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->email)->first();
+
+            if ($user && Hash::check($request->password, $user->password)) {
+                if (!$user->is_approved) {
+                    throw ValidationException::withMessages([
+                        Fortify::username() => __('Your account is pending administrator approval.'),
+                    ]);
+                }
+
+                return $user;
+            }
+
+            return false;
+        });
     }
 
     /**

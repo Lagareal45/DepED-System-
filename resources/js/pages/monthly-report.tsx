@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
 import { Search, Calendar, Printer } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -132,7 +132,7 @@ export default function MonthlyReport() {
                 printWindow.print();
                 printWindow.onafterprint = () => printWindow.close();
             }, 300);
-        } catch (err) {
+        } catch {
             setError('Failed to open print dialog.');
         } finally {
             setDownloading(false);
@@ -261,7 +261,7 @@ export default function MonthlyReport() {
             </div>
             <div style="display: flex; flex-direction: column; align-items: center; margin-left: auto;">
                 <div style="height: 40px; margin-bottom: 4px;"></div>
-                <div style="border-bottom: 1px solid #000; width: 200px; margin-bottom: 4px; text-align: center; padding-bottom: 2px;">${reportInfo?.driver || ''}</div>
+                <div style="border-bottom: 1px solid #000; width: 200px; margin-bottom: 4px; text-align: center; padding-bottom: 2px;">${(reportInfo?.driver || '').toUpperCase()}</div>
                 <div style="text-align: center; font-size: 10pt;">Driver</div>
             </div>
         </div>
@@ -470,7 +470,7 @@ export default function MonthlyReport() {
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 'auto' }}>
                                         <div style={{ height: '40px', marginBottom: '4px' }}></div>
-                                        <div style={{ borderBottom: '1px solid var(--border)', width: '200px', marginBottom: '4px', textAlign: 'center', paddingBottom: '2px' }}>{reportInfo?.driver || ''}</div>
+                                        <div style={{ borderBottom: '1px solid var(--border)', width: '200px', marginBottom: '4px', textAlign: 'center', paddingBottom: '2px' }}>{(reportInfo?.driver || '').toUpperCase()}</div>
                                         <div style={{ textAlign: 'center', fontSize: '10pt' }}>Driver</div>
                                     </div>
                                 </div>

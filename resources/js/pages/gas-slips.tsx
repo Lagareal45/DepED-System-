@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { GasSlipForm } from '@/components/gas-slip-form';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [

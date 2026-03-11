@@ -54,21 +54,38 @@ class DashboardController extends Controller
             $tripsCount = TripTicket::whereBetween('created_at', [$monthStart, $monthEnd])->count();
             $fuelSum = GasSlip::whereBetween('created_at', [$monthStart, $monthEnd])->sum('liters');
             
+            // Break down fuel for the overview chart
+            $gasolineSum = GasSlip::whereBetween('created_at', [$monthStart, $monthEnd])->where('fuel_type', 'Gasoline')->sum('liters');
+            $dieselSum = GasSlip::whereBetween('created_at', [$monthStart, $monthEnd])->where('fuel_type', 'Diesel')->sum('liters');
+            $unknownSum = GasSlip::whereBetween('created_at', [$monthStart, $monthEnd])->where(function($q) {
+                $q->whereNull('fuel_type')->orWhere('fuel_type', '');
+            })->sum('liters');
+            
             $monthlyData[] = [
                 'month' => $monthName,
                 'trips' => $tripsCount,
-                'fuel' => round($fuelSum, 2)
+                'fuel' => round($fuelSum, 2),
+                'gasoline' => round($gasolineSum, 2),
+                'diesel' => round($dieselSum, 2),
+                'unknown_fuel' => round($unknownSum, 2),
             ];
         }
 
         // Fuel Types Distribution Data (Traffic Sources replacement)
         $fuelTypesRaw = GasSlip::select('fuel_type', DB::raw('SUM(liters) as total_liters'))
                             ->groupBy('fuel_type')
+                            ->orderBy('total_liters', 'desc')
                             ->get();
                             
         $totalLitersAllType = $fuelTypesRaw->sum('total_liters');
                             
-        $colors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#14b8a6'];
+        // Standardize colors so PieChart matches Overview chart
+        $fuelColorMap = [
+            'Unknown' => '#9ca3af',   // Grey (changed from purple so Trips can keep purple)
+            'Diesel' => '#3b82f6',    // Blue
+            'Gasoline' => '#10b981',  // Green
+        ];
+        $defaultColors = ['#f59e0b', '#ef4444', '#14b8a6'];
         
         $trafficSources = [];
         $trafficSourcesList = [];
@@ -78,7 +95,9 @@ class DashboardController extends Controller
             $liters = floatval($fuelItem->total_liters);
             
             $percent = $totalLitersAllType > 0 ? round(($liters / $totalLitersAllType) * 100, 1) : 0;
-            $color = $colors[$index % count($colors)];
+            
+            // Apply mapped color, fallback to defaults if adding weird new fuel types
+            $color = $fuelColorMap[$fuelTypeName] ?? ($defaultColors[$index % count($defaultColors)]);
             
             $trafficSources[] = [
                 'name' => $fuelTypeName,

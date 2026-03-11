@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
 import { router } from '@inertiajs/react';
+import { Plus, X, Printer } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Plus, X, Printer } from 'lucide-react';
 
 interface Destination {
     id: string;
@@ -113,18 +113,7 @@ export function TripTicketForm() {
         }
     };
 
-    const calculateGasolineTotal = () => {
-        const balanceInTank = parseFloat(formData.gasolineBalanceInTank) || 0;
-        const issued = parseFloat(formData.gasolineIssued) || 0;
-        const purchased = parseFloat(formData.gasolinePurchased) || 0;
-        return balanceInTank + issued + purchased;
-    };
 
-    const calculateGasolineBalance = () => {
-        const total = calculateGasolineTotal();
-        const deducted = parseFloat(formData.gasolineDeducted) || 0;
-        return total - deducted;
-    };
 
     const calculateGasolineDeducted = () => {
         const a = parseFloat(formData.gasolineBalanceInTank) || 0;
@@ -147,7 +136,7 @@ export function TripTicketForm() {
 
     useEffect(() => {
         fetchNextTicketNo();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     const submitToServer = async () => {
@@ -158,9 +147,6 @@ export function TripTicketForm() {
             const xsrfDecoded = xsrf ? decodeURIComponent(xsrf) : '';
 
             // Using manually entered values but falling back to formulas if they are empty
-            const totalGasoline = formData.gasolineTotalLitres ? Number(formData.gasolineTotalLitres) : null;
-            const finalBalance = formData.gasolineFinalBalance ? Number(formData.gasolineFinalBalance) : null;
-
             const payload = {
                 document_no: formData.documentNo || null,
                 date: formData.date || null,
@@ -266,7 +252,7 @@ export function TripTicketForm() {
                 printWindow.print();
                 printWindow.onafterprint = () => printWindow.close();
             }, 300);
-        } catch (err) {
+        } catch {
             setSubmitError('Failed to open print dialog.');
         } finally {
             setDownloading(false);
@@ -563,7 +549,7 @@ export function TripTicketForm() {
         <div class="cert">
             <div class="statement">I HEREBY CERTIFY to the correctness of the above statement of record travel.</div>
             <div class="sig-wrap">
-                <div class="sig-line">${formData.driverSignature || formData.driver || ''}</div>
+                <div class="sig-line">${(formData.driverSignature || formData.driver || '').toUpperCase()}</div>
                 <div class="sig-label">Driver</div>
             </div>
         </div>
@@ -1094,7 +1080,7 @@ export function TripTicketForm() {
                     <div className="flex justify-end">
                         <div className="text-sm text-center">
                             <p className="text-muted-foreground border-b border-muted-foreground min-w-[200px] inline-block px-4 pb-1">
-                                {formData.driver || '\u00A0'}
+                                {(formData.driver || '').toUpperCase() || '\u00A0'}
                             </p>
                             <p className="text-muted-foreground mt-1">Driver</p>
                         </div>

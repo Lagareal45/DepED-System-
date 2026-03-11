@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
+import { FileText, FileSpreadsheet, Car, Droplet, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { ComposedChart, Line, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { FileText, FileSpreadsheet, Car, Droplet, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
-import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -170,14 +170,18 @@ export default function Dashboard() {
                     <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={monthlyData}>
-                                <CartesianGrid strokeDasharray="3 3" />
+                            <ComposedChart data={monthlyData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="month" />
-                                <YAxis />
+                                <YAxis yAxisId="left" />
+                                <YAxis yAxisId="right" orientation="right" allowDecimals={false} />
                                 <Tooltip />
-                                <Line type="monotone" dataKey="trips" stroke="#8b5cf6" strokeWidth={2} name="Trips" />
-                                <Line type="monotone" dataKey="fuel" stroke="#3b82f6" strokeWidth={2} name="Fuel (Liters)" />
-                            </LineChart>
+                                <Legend />
+                                <Bar yAxisId="left" dataKey="gasoline" stackId="a" fill="#10b981" name="Gasoline (L)" radius={[0, 0, 4, 4]} />
+                                <Bar yAxisId="left" dataKey="diesel" stackId="a" fill="#3b82f6" name="Diesel (L)" />
+                                <Bar yAxisId="left" dataKey="unknown_fuel" stackId="a" fill="#9ca3af" name="Unknown Fuel (L)" radius={[4, 4, 0, 0]} />
+                                <Line yAxisId="right" type="linear" dataKey="trips" stroke="#8b5cf6" strokeWidth={3} name="Total Trips" dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            </ComposedChart>
                         </ResponsiveContainer>
                     </div>
 
