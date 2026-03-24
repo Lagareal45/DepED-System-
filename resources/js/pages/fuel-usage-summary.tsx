@@ -349,7 +349,7 @@ export default function FuelUsageSummary() {
                 const totalDistance = totalDistanceNumber !== null ? totalDistanceNumber : '';
                 const fuelUsedValue = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
                 const fuelUsed = Number(fuelUsedValue);
-                const normalTravelKmPerLiter = 6;
+                const normalTravelKmPerLiter = 7;
                 const distancePerLiter = totalDistanceNumber !== null ? (fuelUsed > 0 ? (totalDistanceNumber / fuelUsed).toFixed(2) : '0.00') : '';
                 const totalLitersWithAllowance = totalDistanceNumber !== null ? ((totalDistanceNumber / normalTravelKmPerLiter) * 1.1).toFixed(2) : '';
                 const excess = totalLitersWithAllowance !== '' ? (fuelUsed - Number(totalLitersWithAllowance)).toFixed(2) : '';
@@ -477,7 +477,7 @@ export default function FuelUsageSummary() {
                             <Calendar size={16} />
                         </span>
                         <Input
-                            type="date"
+                            type="month"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
                             className="pl-8 min-w-[180px]"
@@ -582,7 +582,7 @@ export default function FuelUsageSummary() {
                                         const fuelUsedSource = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
                                         const fuelUsedNumber = typeof fuelUsedSource === 'number' ? fuelUsedSource : Number(fuelUsedSource) || 0;
 
-                                        const normalTravelKmPerLiter = 6; // D – assumed standard value
+                                        const normalTravelKmPerLiter = 7; // D – assumed standard value
 
                                         const distancePerLiter = totalDistanceNumber !== null
                                             ? (fuelUsedNumber > 0 ? totalDistanceNumber / fuelUsedNumber : 0)

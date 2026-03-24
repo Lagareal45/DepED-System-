@@ -1,14 +1,17 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
+import { useState, useEffect } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { AdminPasswordPrompt } from '@/components/admin-password-prompt';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
+import { usePage } from '@inertiajs/react';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
@@ -36,10 +39,23 @@ const sidebarNavItems: NavItem[] = [
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentUrl } = useCurrentUrl();
+    const page = usePage();
+    const isAdmin = (page.props.auth as any).user.is_admin;
+    const [isAuthenticated, setIsAuthenticated] = useState(isAdmin);
 
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <AdminPasswordPrompt 
+                onSuccess={() => {
+                    setIsAuthenticated(true);
+                }} 
+            />
+        );
     }
 
     return (

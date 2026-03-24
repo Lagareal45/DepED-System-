@@ -46,6 +46,17 @@ class FortifyServiceProvider extends ServiceProvider
             };
         });
 
+        $this->app->singleton(\Laravel\Fortify\Contracts\LoginResponse::class, function () {
+            return new class implements \Laravel\Fortify\Contracts\LoginResponse {
+                public function toResponse($request)
+                {
+                    return $request->user()->is_admin
+                        ? redirect()->route('admin.users')
+                        : redirect()->intended(config('fortify.home'));
+                }
+            };
+        });
+
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();

@@ -15,6 +15,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('dashboard', function () {
+    if (auth()->user()->is_admin) {
+        return redirect()->route('admin.users');
+    }
     return Inertia::render('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -55,6 +58,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(functio
     Route::get('users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('users/{user}/approve', [AdminController::class, 'approve'])->name('admin.users.approve');
     Route::delete('users/{user}/reject', [AdminController::class, 'reject'])->name('admin.users.reject');
+    Route::patch('users/{user}', [AdminController::class, 'update'])->name('admin.users.update');
+    Route::delete('users/{user}', [AdminController::class, 'destroy'])->name('admin.users.destroy');
 });
 
 require __DIR__.'/settings.php';

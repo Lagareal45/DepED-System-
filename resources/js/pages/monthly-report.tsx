@@ -145,7 +145,7 @@ export default function MonthlyReport() {
                 <tr>
                     <td style="border: 1px dotted #000; padding: 8px; text-align: left; font-size: 10pt;">${dayData.day}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${formatDate(dayData.date)}</td>
-                    <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.odometer_before !== null && dayData.odometer_after !== null ? (dayData.odometer_after - dayData.odometer_before).toFixed(1) : (dayData.distance_traveled !== null ? dayData.distance_traveled.toFixed(1) : '')}</td>
+                    <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.odometer_before !== null && dayData.odometer_after !== null ? Number((dayData.odometer_after - dayData.odometer_before).toFixed(1)) : (dayData.distance_traveled !== null ? Number(dayData.distance_traveled.toFixed(1)) : '')}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
                     <td style="border: 1px dotted #000; padding: 8px; font-size: 10pt; text-align: center;">${dayData.grease_used || ''}</td>
@@ -238,7 +238,7 @@ export default function MonthlyReport() {
                 <tr class="totals-row">
                     <td>TOTALS:</td>
                     <td></td>
-                    <td style="text-align: center;">${totalDistance.toFixed(1)}</td>
+                    <td style="text-align: center;">${Number(totalDistance.toFixed(1))}</td>
                     <td style="text-align: center;">${totalGasoline.toFixed(2)}</td>
                     <td style="text-align: center;">${totalOil.toFixed(2)}</td>
                     <td style="text-align: center;">${totalGrease.toFixed(2)}</td>
@@ -288,7 +288,7 @@ export default function MonthlyReport() {
                             <Calendar size={16} />
                         </span>
                         <Input
-                            type="date"
+                            type="month"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
                             className="pl-8 min-w-[180px]"
@@ -399,7 +399,7 @@ export default function MonthlyReport() {
                                                     <tr key={`${dayData.day}-${index}`}>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{dayData.day}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{formatDate(dayData.date)}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? (dayData.odometer_after - dayData.odometer_before).toFixed(1) : (dayData.distance_traveled !== null ? dayData.distance_traveled.toFixed(1) : '')}</td>
+                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? Number((dayData.odometer_after - dayData.odometer_before).toFixed(1)) : (dayData.distance_traveled !== null ? Number(dayData.distance_traveled.toFixed(1)) : '')}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
                                                         <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.grease_used || ''}</td>
@@ -410,7 +410,7 @@ export default function MonthlyReport() {
                                                     <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
                                                     <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                        {reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0).toFixed(1)}
+                                                        {Number(reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0).toFixed(1))}
                                                     </td>
                                                     <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                         {reportData.reduce((sum, item) => sum + (item.gasoline_consumed || 0), 0).toFixed(2)}

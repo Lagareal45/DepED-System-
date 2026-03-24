@@ -32,7 +32,10 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/DepED%20Buk_Logov2.png" type="image/png">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('DepED Buk_Logov2.png') }}?v=2">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('DepED Buk_Logov2.png') }}?v=2">
+        <link rel="shortcut icon" href="{{ asset('DepED Buk_Logov2.png') }}?v=2" type="image/png">
+        <link rel="apple-touch-icon" href="{{ asset('DepED Buk_Logov2.png') }}?v=2">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

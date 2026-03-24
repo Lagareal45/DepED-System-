@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { dashboardService, type DashboardMetrics, type MonthlyData, type TrafficSource, type TrafficSourceItem, type MonthlyGoal } from '@/services/dashboard-service';
+import { dashboardService, type DashboardMetrics, type MonthlyData, type TrafficSource, type TrafficSourceItem, type ActivityLog } from '@/services/dashboard-service';
 
 interface DashboardData {
     metrics: DashboardMetrics | null;
     monthlyData: MonthlyData[];
     trafficSources: TrafficSource[];
     trafficSourcesList: TrafficSourceItem[];
-    monthlyGoals: MonthlyGoal[];
+    activities: ActivityLog[];
     loading: boolean;
     error: string | null;
     refreshData: () => Promise<void>;
@@ -17,7 +17,7 @@ export function useDashboardData(): DashboardData {
     const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
     const [trafficSources, setTrafficSources] = useState<TrafficSource[]>([]);
     const [trafficSourcesList, setTrafficSourcesList] = useState<TrafficSourceItem[]>([]);
-    const [monthlyGoals, setMonthlyGoals] = useState<MonthlyGoal[]>([]);
+    const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +32,7 @@ export function useDashboardData(): DashboardData {
             setMonthlyData(data.monthlyData);
             setTrafficSources(data.trafficSources);
             setTrafficSourcesList(data.trafficSourcesList);
-            setMonthlyGoals(data.monthlyGoals);
+            setActivities(data.activities);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
             console.error('Dashboard data fetch error:', err);
@@ -50,7 +50,7 @@ export function useDashboardData(): DashboardData {
         monthlyData,
         trafficSources,
         trafficSourcesList,
-        monthlyGoals,
+        activities,
         loading,
         error,
         refreshData: fetchData

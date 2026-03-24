@@ -23,6 +23,22 @@ class TripTicketController extends Controller
     {
         $user = $request->user();
 
+        // Debug: Log received data to file
+        $debugData = [
+            'received_at' => now()->toDateTimeString(),
+            'gasoline_final_balance' => $request->input('gasoline_final_balance'),
+            'gasoline_total_litres' => $request->input('gasoline_total_litres'),
+            'all_gasoline_fields' => [
+                'balance_in_tank' => $request->input('gasoline_balance_in_tank'),
+                'issued' => $request->input('gasoline_issued'),
+                'purchased' => $request->input('gasoline_purchased'),
+                'total_litres' => $request->input('gasoline_total_litres'),
+                'deducted' => $request->input('gasoline_deducted'),
+                'final_balance' => $request->input('gasoline_final_balance'),
+            ]
+        ];
+        file_put_contents(storage_path('debug_trip_ticket.json'), json_encode($debugData, JSON_PRETTY_PRINT));
+
         $data = $request->validate([
             'document_no' => ['required', 'string', 'unique:trip_tickets'],
             'date' => ['nullable', 'date'],
@@ -43,12 +59,16 @@ class TripTicketController extends Controller
             'gasoline_balance_in_tank' => ['nullable', 'numeric'],
             'gasoline_issued' => ['nullable', 'numeric'],
             'gasoline_purchased' => ['nullable', 'numeric'],
+            'gasoline_total_litres' => ['nullable', 'numeric'],
             'gasoline_deducted' => ['nullable', 'numeric'],
+            'gasoline_final_balance' => ['nullable', 'numeric'],
+            'total_gasoline' => ['nullable', 'string', 'max:255'],
 
             'gear_oil_used' => ['nullable', 'numeric'],
             'lubricants_used' => ['nullable', 'numeric'],
             'greased_oil_used' => ['nullable', 'numeric'],
 
+            'speed' => ['nullable', 'numeric'],
             'speed_at_beginning' => ['nullable', 'numeric'],
             'speed_distance_travelled' => ['nullable', 'numeric'],
             'speed_at_end' => ['nullable', 'numeric'],
@@ -74,8 +94,11 @@ class TripTicketController extends Controller
                     'user_id' => $user->id,
                     'date' => $data['date'] ?? null,
                     'driver' => $data['driver'] ?? null,
+                    'vehicle_type' => $data['vehicle'] ?? null,
                     'plate_no' => $data['plate_no'] ?? null,
                     'purpose' => $data['purpose'] ?? null,
+                    'odometer_before' => isset($data['speed_at_beginning']) ? (int)$data['speed_at_beginning'] : null,
+                    'odometer_after' => isset($data['speed_at_end']) ? (int)$data['speed_at_end'] : null,
                 ]
             );
 

@@ -1,4 +1,6 @@
-import { Printer, X } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Plus, X, Printer } from 'lucide-react';
+import { printOrSavePDF } from '@/lib/pdf-utils';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -119,6 +121,7 @@ export function GasSlipForm() {
                             date: tripTicketData.date ? tripTicketData.date.split('T')[0] : '',
                             odometerBefore: tripTicketData.speedAtBeginning || '',
                             odometerAfter: tripTicketData.speedAtEnd || '',
+                            vehicleType: tripTicketData.vehicle || '',
                         }));
                         // Fetch the existing gas slip record to get any additional data
                         try {
@@ -252,113 +255,13 @@ export function GasSlipForm() {
         }
     };
 
-    const printOrSavePDF = () => {
+    const handlePrint = () => {
         setDownloading(true);
         try {
-            const html = generatePDFHTML();
-            const printWindow = window.open('', '_blank');
-            if (!printWindow) {
-                setSubmitError('Please allow pop-ups to print or save as PDF.');
-                return;
-            }
-            printWindow.document.write(html);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.onafterprint = () => printWindow.close();
-            }, 300);
-        } catch {
-            setSubmitError('Failed to open print dialog.');
+            printOrSavePDF('Gas Slip', formData);
         } finally {
             setDownloading(false);
         }
-    };
-
-    const generatePDFHTML = () => {
-        const copyTemplate = (title: string) => `
-            <div style="width: 48%; display: inline-block; border: 2px solid #000; padding: 12px; vertical-align: top; position: relative;">
-                <div style="text-align: center; font-size: 10pt; margin-bottom: 8px;">
-                    <p style="margin: 0; font-weight: bold;">Department of Education</p>
-                    <p style="margin: 0;">Region X</p>
-                    <p style="margin: 0; font-weight: bold;">DIVISION OF BUKIDNON</p>
-                    <p style="margin: 0;">Malaybalay City</p>
-                    <p style="margin: 4px 0 0 0; font-weight: bold; font-size: 12pt;">GAS SLIP</p>
-                </div>
-
-                <div style="font-size: 9pt; line-height: 1.3;">
-                    <div><strong>Office:</strong> DepEd-SDO BUKIDNON</div>
-                    <div><strong>Date:</strong> ${formData.date || '_____'}</div>
-                    <div><strong>Gas Slip No.:</strong> ${formData.documentNo || '_____'}</div>
-                    <div><strong>Vehicle Type:</strong> ${formData.vehicleType || '_____'}</div>
-                    <div><strong>Plate No.:</strong> ${formData.plateNo || '_____'}</div>
-                    <div><strong>Driver:</strong> ${formData.driver || '_____'} </div>
-                    <div><strong>Number of Cylinder:</strong> ${formData.numberOfCylinder || '_____'} </div>
-                    <div><strong>Purpose/Destination:</strong> ${formData.purpose || '_____'}</div>
-                    <div><strong>Date of Travel:</strong> ${formatDateRange(formData.dateOfTravelStart, formData.dateOfTravelEnd) || '_____'} </div>
-                    <div><strong>Odometer:</strong></div>
-                    <div style="margin-left: 20px;">
-                        Before: ${formData.odometerBefore || '_____'}  After: ${formData.odometerAfter || '_____'}
-                    </div>
-                    <div>
-                        <strong>Fuel:</strong>
-                        <span style="margin-left: 10px;">
-                            ☐ Gasoline <span style="margin-left: 20px;">☐ Diesel</span>
-                        </span>
-                    </div>
-                    <div><strong>Liters:</strong> ${formData.liters || '_____'}</div>
-                    <div><strong>Amount:</strong> ₱${formData.amount || '_____'}</div>
-                </div>
-
-                <div style="margin-top: 12px; font-size: 9pt; text-align: left;">
-                    <div><strong>Requested by:</strong></div>
-                    <div style="height: 20px; border-bottom: 1px solid #000; margin: 2px 0; width: 100%;"></div>
-                    <div style="font-size: 8pt; text-align: center;">Signature over Printed Name</div>
-                </div>
-
-                <div style="margin-top: 8px; font-size: 9pt;">
-                    <div><strong>Approved by:</strong></div>
-                    <div style="height: 20px; border-bottom: 1px solid #000; margin: 2px 0;"></div>
-                    <div style="font-weight: bold; text-align: center;">${formData.approvedByName || '_____'}</div>
-                    <div style="text-align: center;">${formData.approvedByTitle || '_____'}</div>
-                </div>
-
-                <div style="margin-top: 8px; font-size: 9pt; text-align: center;">
-                    <div><strong>Acknowledged by:</strong></div>
-                    <div style="height: 20px; border-bottom: 1px solid #000; margin: 2px 0;"></div>
-                    <div style="font-size: 8pt; text-align: center; font-weight: bold;">ACI-R Gasoline Station In-charge</div>
-                </div>
-
-                <div style="position: absolute; right: 8px; bottom: 1px; font-size: 7pt; font-weight: bold;">
-                    ${title}
-                </div>
-            </div>
-        `;
-
-        return `  
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Gas Slip ${formData.documentNo}</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Times New Roman', serif; font-size: 11pt; margin: 12px; line-height: 1.2; color: #000; }
-        .container { display: flex; justify-content: space-between; gap: 12px; }
-        @media print {
-            @page { margin: 0; }
-            body { margin: 8px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        ${copyTemplate('Division Copy')}
-        ${copyTemplate('Gas Station Copy')}
-    </div>
-</body>
-</html>
-        `;
     };
 
     return (
@@ -683,7 +586,7 @@ export function GasSlipForm() {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={printOrSavePDF}
+                                    onClick={handlePrint}
                                     disabled={submitting || downloading}
                                 >
                                     <Printer className="h-4 w-4 mr-2" />

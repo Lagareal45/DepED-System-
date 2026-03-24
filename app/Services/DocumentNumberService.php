@@ -21,9 +21,10 @@ class DocumentNumberService
     {
         $today = Carbon::now()->format('Y-m-d');
 
-        // Count only trip tickets created today
-        // Gas slips are auto-created with the same number, so we don't count them
-        $tripTicketsCount = TripTicket::whereDate('created_at', $today)->count();
+        // Count all trip tickets to ensure numbering is continuous across days
+        // Gas slips are either created from trip tickets (same number) 
+        // or independently, but we use trip tickets as the primary sequence
+        $tripTicketsCount = TripTicket::count();
 
         // Generate the next number with format: YYYY-MM-DD-###
         $nextNumber = str_pad((string) ($tripTicketsCount + 1), 3, '0', STR_PAD_LEFT);

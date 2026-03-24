@@ -34,11 +34,13 @@ export interface TrafficSourceItem {
     trend: 'up' | 'down';
 }
 
-export interface MonthlyGoal {
-    title: string;
-    current: number;
-    target: number;
-    percentage: number;
+export interface ActivityLog {
+    type: 'Trip Ticket' | 'Gas Slip';
+    document_no: string;
+    driver: string;
+    status: string;
+    timestamp: string;
+    data: any;
 }
 
 export interface DashboardDataResponse {
@@ -46,7 +48,7 @@ export interface DashboardDataResponse {
     monthlyData: MonthlyData[];
     trafficSources: TrafficSource[];
     trafficSourcesList: TrafficSourceItem[];
-    monthlyGoals: MonthlyGoal[];
+    activities: ActivityLog[];
 }
 
 class DashboardService {

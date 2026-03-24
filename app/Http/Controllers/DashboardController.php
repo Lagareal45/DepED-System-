@@ -73,6 +73,8 @@ class DashboardController extends Controller
 
         // Fuel Types Distribution Data (Traffic Sources replacement)
         $fuelTypesRaw = GasSlip::select('fuel_type', DB::raw('SUM(liters) as total_liters'))
+                            ->whereNotNull('fuel_type')
+                            ->where('fuel_type', '!=', '')
                             ->groupBy('fuel_type')
                             ->orderBy('total_liters', 'desc')
                             ->get();
@@ -122,28 +124,43 @@ class DashboardController extends Controller
             ];
         }
 
-        // Monthly Goals (e.g. Total distance, Monthly Fuel Budget, etc.)
-        $monthlyGoals = [
-             [
-                 'title' => 'Monthly Fuel Consumed', 
-                 'current' => round($recentFuel, 2), 
-                 'target' => 500, // Example Target
-                 'percentage' => $recentFuel > 0 ? min(round(($recentFuel / 500) * 100), 100) : 0 
-             ],
-             [
-                 'title' => 'Monthly Trips', 
-                 'current' => $recentTrips, 
-                 'target' => 50, // Example Target
-                 'percentage' => $recentTrips > 0 ? min(round(($recentTrips / 50) * 100), 100) : 0
-             ],
-             [
-                 'title' => 'Active Vehicles', 
-                 'current' => $recentVehicles, 
-                 'target' => 10,  // Example Target
-                 'percentage' => $recentVehicles > 0 ? min(round(($recentVehicles / 10) * 100), 100) : 0
-             ],
-        ];
-
+        // Activity Logs (Recent Trip Tickets and Gas Slips)
+        $recentTripTickets = TripTicket::orderBy('created_at', 'desc')->limit(5)->get();
+        $recentGasSlips = GasSlip::orderBy('created_at', 'desc')->limit(5)->get();
+        
+        $activities = [];
+        
+        foreach ($recentTripTickets as $ticket) {
+            $activities[] = [
+                'type' => 'Trip Ticket',
+                'document_no' => $ticket->document_no,
+                'driver' => $ticket->driver ?? 'Unknown',
+                'status' => 'Created',
+                'timestamp' => $ticket->created_at->diffForHumans(),
+                'raw_timestamp' => $ticket->created_at->toISOString(),
+                'data' => $ticket->toArray(),
+            ];
+        }
+        
+        foreach ($recentGasSlips as $slip) {
+            $activities[] = [
+                'type' => 'Gas Slip',
+                'document_no' => $slip->document_no,
+                'driver' => $slip->driver ?? 'Unknown',
+                'status' => 'Created',
+                'timestamp' => $slip->created_at->diffForHumans(),
+                'raw_timestamp' => $slip->created_at->toISOString(),
+                'data' => $slip->toArray(),
+            ];
+        }
+        
+        // Sort by raw timestamp descending
+        usort($activities, function($a, $b) {
+            return strcmp($b['raw_timestamp'], $a['raw_timestamp']);
+        });
+        
+        // Limit to 10 total
+        $activities = array_slice($activities, 0, 10);
 
         return response()->json([
             'metrics' => [
@@ -159,7 +176,7 @@ class DashboardController extends Controller
             'monthlyData' => $monthlyData,
             'trafficSources' => $trafficSources,
             'trafficSourcesList' => $trafficSourcesList,
-            'monthlyGoals' => $monthlyGoals,
+            'activities' => $activities,
         ]);
     }
     

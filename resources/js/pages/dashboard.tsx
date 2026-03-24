@@ -1,7 +1,8 @@
 import { Head } from '@inertiajs/react';
-import { FileText, FileSpreadsheet, Car, Droplet, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import { FileText, FileSpreadsheet, Car, Droplet, ArrowUp, ArrowDown, RefreshCw, Eye } from 'lucide-react';
 import { ComposedChart, Line, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { printOrSavePDF } from '@/lib/pdf-utils';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -19,7 +20,7 @@ export default function Dashboard() {
         monthlyData,
         trafficSources,
         trafficSourcesList,
-        monthlyGoals,
+        activities,
         loading,
         error,
         refreshData
@@ -178,8 +179,7 @@ export default function Dashboard() {
                                 <Tooltip />
                                 <Legend />
                                 <Bar yAxisId="left" dataKey="gasoline" stackId="a" fill="#10b981" name="Gasoline (L)" radius={[0, 0, 4, 4]} />
-                                <Bar yAxisId="left" dataKey="diesel" stackId="a" fill="#3b82f6" name="Diesel (L)" />
-                                <Bar yAxisId="left" dataKey="unknown_fuel" stackId="a" fill="#9ca3af" name="Unknown Fuel (L)" radius={[4, 4, 0, 0]} />
+                                <Bar yAxisId="left" dataKey="diesel" stackId="a" fill="#3b82f6" name="Diesel (L)" radius={[4, 4, 0, 0]} />
                                 <Line yAxisId="right" type="linear" dataKey="trips" stroke="#8b5cf6" strokeWidth={3} name="Total Trips" dot={{ r: 4 }} activeDot={{ r: 6 }} />
                             </ComposedChart>
                         </ResponsiveContainer>
@@ -230,42 +230,69 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Monthly Goals */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Goals</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {monthlyGoals.map((goal, index) => (
-                            <div key={index}>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm text-gray-600">{goal.title}</span>
-                                    <span className="text-sm font-medium text-gray-900">
-                                        {goal.title === 'Conversion Rate'
-                                            ? `${goal.current}%`
-                                            : goal.title === 'New Customers'
-                                                ? goal.current.toLocaleString()
-                                                : `₱${goal.current.toLocaleString()}`
-                                        }
-                                    </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                                        style={{ width: `${goal.percentage}%` }}
-                                    />
-                                </div>
-                                <div className="flex justify-between items-center mt-1">
-                                    <span className="text-xs text-gray-500">{goal.percentage}%</span>
-                                    <span className="text-xs text-gray-500">
-                                        Target: {goal.title === 'Conversion Rate'
-                                            ? `${goal.target}%`
-                                            : goal.title === 'New Customers'
-                                                ? goal.target.toLocaleString()
-                                                : `₱${goal.target.toLocaleString()}`
-                                        }
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                {/* Activity Logs */}
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-gray-900">Activity Logs</h2>
+                        <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                            Recent
+                        </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="px-6 py-3 font-semibold">Activity Type</th>
+                                    <th className="px-6 py-3 font-semibold">Document No.</th>
+                                    <th className="px-6 py-3 font-semibold">Driver</th>
+                                    <th className="px-6 py-3 font-semibold">Status</th>
+                                    <th className="px-6 py-3 font-semibold">Time</th>
+                                    <th className="px-6 py-3 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {activities.length > 0 ? (
+                                    activities.map((activity, index) => (
+                                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center">
+                                                    <div className={`p-1.5 rounded-md mr-3 ${
+                                                        activity.type === 'Trip Ticket' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                                                    }`}>
+                                                        {activity.type === 'Trip Ticket' ? <FileText size={14} /> : <FileSpreadsheet size={14} />}
+                                                    </div>
+                                                    <span className="font-medium text-gray-900">{activity.type}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-xs">{activity.document_no}</td>
+                                            <td className="px-6 py-4">{activity.driver}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                    {activity.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-400">{activity.timestamp}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    onClick={() => printOrSavePDF(activity.type, activity.data)}
+                                                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none transition-colors"
+                                                    title="View PDF"
+                                                >
+                                                    <Eye size={14} className="mr-1" />
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">
+                                            No recent activities found
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

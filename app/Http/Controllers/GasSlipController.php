@@ -28,6 +28,22 @@ class GasSlipController extends Controller
             return response()->json(['error' => 'Gas slip not found'], 404);
         }
 
+        // If odometer readings or vehicle_type are null, fallback to TripTicket data
+        if ($gasSlip->odometer_before === null || $gasSlip->odometer_after === null || empty($gasSlip->vehicle_type)) {
+            $tripTicket = \App\Models\TripTicket::where('document_no', $documentNo)->first();
+            if ($tripTicket) {
+                if ($gasSlip->odometer_before === null) {
+                    $gasSlip->odometer_before = $tripTicket->speed_at_beginning ? (int)$tripTicket->speed_at_beginning : null;
+                }
+                if ($gasSlip->odometer_after === null) {
+                    $gasSlip->odometer_after = $tripTicket->speed_at_end ? (int)$tripTicket->speed_at_end : null;
+                }
+                if (empty($gasSlip->vehicle_type) && !empty($tripTicket->vehicle)) {
+                    $gasSlip->vehicle_type = $tripTicket->vehicle;
+                }
+            }
+        }
+
         return response()->json($gasSlip);
     }
 
