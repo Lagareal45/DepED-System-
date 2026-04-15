@@ -1,3 +1,5 @@
+import { toast } from 'sonner';
+
 export const formatTime = (t: string) => {
     if (!t) return '';
     const [h, m] = t.split(':');
@@ -504,7 +506,7 @@ export const printOrSavePDF = (type: 'Trip Ticket' | 'Gas Slip', data: any) => {
         const html = type === 'Trip Ticket' ? generateTripTicketHTML(data) : generateGasSlipHTML(data);
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
-            alert('Please allow pop-ups to print or save as PDF.');
+            toast.error('Please allow pop-ups to print or save as PDF.');
             return;
         }
         printWindow.document.write(html);
@@ -516,6 +518,6 @@ export const printOrSavePDF = (type: 'Trip Ticket' | 'Gas Slip', data: any) => {
         }, 300);
     } catch (err) {
         console.error('Failed to open print dialog:', err);
-        alert('Failed to open print dialog.');
+        toast.error('Failed to open print dialog. Please try again.');
     }
 };

@@ -402,22 +402,22 @@ export default function FuelUsageSummary() {
                 <table>
                     <thead>
                         <tr>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Type of Vehicle</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Plate Number</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Number of Cylinder</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">ODOMETER</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Reading</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Distance Travelled (A)</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Fuel Used (B)</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Distance Travelled Per Liter (C=A%B)</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Normal Travel Km. Per Liter (D)</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Excess</th>
-                            <th rowSpan="2" className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Remarks</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Type of Vehicle</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Plate Number</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Number of Cylinder</th>
+                            <th className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">ODOMETER</th>
+                            <th className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Reading</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Distance Travelled (A)</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Fuel Used (B)</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Distance Travelled Per Liter (C=A%B)</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Normal Travel Km. Per Liter (D)</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Excess</th>
+                            <th rowSpan="2" className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Remarks</th>
                         </tr>
                         <tr>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Beginning</th>
-                            <th className="border border-border text-foreground" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Ending</th>
+                            <th className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Beginning</th>
+                            <th className="border border-border text-black" style="text-align: center; padding: 6px; width: 10%; font-size: 10pt;">Ending</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -480,7 +480,7 @@ export default function FuelUsageSummary() {
                             type="month"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="pl-8 min-w-[180px]"
+                            className="pl-8 min-w-[180px] bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
                     <div className="relative flex items-center flex-1 max-w-md mx-auto">
@@ -492,7 +492,7 @@ export default function FuelUsageSummary() {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Search by Vehicle Type"
-                            className="pl-8 w-full"
+                            className="pl-8 w-full bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
                     <Button onClick={() => void handleGenerate()} disabled={loading}>
@@ -514,9 +514,9 @@ export default function FuelUsageSummary() {
                         </div>
                     </div>
                 )}
-                <Card className="shadow-lg border border-border bg-background">
+                <Card className="shadow-lg border border-border bg-white">
                     <CardContent className="pt-2">
-                        <div className="text-foreground relative" style={{ textAlign: 'center', marginTop: '0px' }}>
+                        <div className="text-black relative" style={{ textAlign: 'center', marginTop: '0px' }}>
                             <div className="absolute top-0 right-4 font-bold hidden sm:block text-sm">Appendix G</div>
                             <div className="pt-6">Republic of the Philippines</div>
                             <div>Department of Education</div>
@@ -538,22 +538,22 @@ export default function FuelUsageSummary() {
                         <table className="border border-border" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt', marginTop: '24px' }}>
                             <thead>
                                 <tr>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Type of Vehicle</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Plate Number</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Number of Cylinder</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>ODOMETER</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Reading</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Fuel Used (B)</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Distance Travelled Per Liter (C=A%B)</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Normal Travel Km. Per Liter (D)</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Excess</th>
-                                    <th rowSpan={2} className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Remarks</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Type of Vehicle</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Plate Number</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Number of Cylinder</th>
+                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>ODOMETER</th>
+                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Reading</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Fuel Used (B)</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Distance Travelled Per Liter (C=A%B)</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Normal Travel Km. Per Liter (D)</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Excess</th>
+                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Remarks</th>
                                 </tr>
                                 <tr>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Beginning</th>
-                                    <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Ending</th>
+                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Beginning</th>
+                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Ending</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -617,22 +617,22 @@ export default function FuelUsageSummary() {
 
                                         return (
                                             <tr key={idx}>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{vehicleType}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{plateNo}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{numberOfCylinder}</td>
-                                                <td className="text-foreground relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{vehicleType}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{plateNo}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{numberOfCylinder}</td>
+                                                <td className="text-black relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                     {start ?? ''}
                                                 </td>
-                                                <td className="text-foreground relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                <td className="text-black relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                     {end ?? ''}
                                                 </td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalDistanceNumber !== null ? totalDistanceNumber : ''}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{fuelUsedNumber}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{distancePerLiter !== null ? distancePerLiter.toFixed(2) : ''}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{normalTravelKmPerLiter}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalLitersWithAllowance !== null ? totalLitersWithAllowance.toFixed(2) : ''}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{excess !== null ? excess.toFixed(2) : ''}</td>
-                                                <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{item.remarks || ''}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalDistanceNumber !== null ? totalDistanceNumber : ''}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{fuelUsedNumber}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{distancePerLiter !== null ? distancePerLiter.toFixed(2) : ''}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{normalTravelKmPerLiter}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalLitersWithAllowance !== null ? totalLitersWithAllowance.toFixed(2) : ''}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{excess !== null ? excess.toFixed(2) : ''}</td>
+                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{item.remarks || ''}</td>
                                             </tr>
                                         );
                                     })
@@ -640,14 +640,14 @@ export default function FuelUsageSummary() {
                                     rows.map((r) => (
                                         <tr key={r}>
                                             {Array(12).fill(0).map((_, j) => (
-                                                <td key={j} className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>&nbsp;</td>
+                                                <td key={j} className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>&nbsp;</td>
                                             ))}
                                         </tr>
                                     ))
                                 )}
                             </tbody>
                         </table>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '48px', fontSize: '15px' }}>
+                        <div className="text-black" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '48px', fontSize: '15px' }}>
                             <div>
                                 <div>Prepared by:</div>
                                 <br />
@@ -656,7 +656,7 @@ export default function FuelUsageSummary() {
                                     <Input
                                         value={preparedByName}
                                         onChange={(e) => setPreparedByName(e.target.value)}
-                                        className="h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
                                         style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
                                     />
                                 </div>
@@ -665,7 +665,7 @@ export default function FuelUsageSummary() {
                                     <Input
                                         value={preparedByPosition}
                                         onChange={(e) => setPreparedByPosition(e.target.value)}
-                                        className="h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
                                         style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
                                     />
                                 </div>
@@ -678,7 +678,7 @@ export default function FuelUsageSummary() {
                                     <Input
                                         value={verifiedBy.name}
                                         onChange={e => setVerifiedBy({ ...verifiedBy, name: e.target.value })}
-                                        className="h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
                                         style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
                                     />
                                 </div>
@@ -687,7 +687,7 @@ export default function FuelUsageSummary() {
                                     <Input
                                         value={verifiedBy.position}
                                         onChange={e => setVerifiedBy({ ...verifiedBy, position: e.target.value })}
-                                        className="h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
                                         style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
                                     />
                                 </div>

@@ -291,7 +291,7 @@ export default function MonthlyReport() {
                             type="month"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="pl-8 min-w-[180px]"
+                            className="pl-8 min-w-[180px] bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
                     <div className="relative flex items-center flex-1 max-w-md mx-auto">
@@ -303,7 +303,7 @@ export default function MonthlyReport() {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Search by Driver Name"
-                            className="pl-8 w-full"
+                            className="pl-8 w-full bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
                     <Button onClick={handleGenerate} disabled={loading}>
@@ -316,21 +316,21 @@ export default function MonthlyReport() {
                     </div>
                 )}
                 <div className="relative min-h-0 flex-1 overflow-y-auto rounded-xl border border-sidebar-border/70 bg-background/40 p-6">
-                    <Card>
+                    <Card className="bg-white">
                         <CardContent className="pt-2">
-                            <div className="text-foreground relative" style={{ textAlign: 'center', marginTop: '0px' }}>
+                            <div className="text-black relative" style={{ textAlign: 'center', marginTop: '0px' }}>
                                 <div className="absolute top-0 right-4 font-bold hidden sm:block text-sm">Appendix F</div>
-                                <p className="text-foreground pt-6" style={{ textAlign: 'center', marginBottom: '4px', fontSize: '9pt', lineHeight: 1.1, margin: 0 }}>
+                                <p className="text-black pt-6" style={{ textAlign: 'center', marginBottom: '4px', fontSize: '9pt', lineHeight: 1.1, margin: 0 }}>
                                     Republic of the Philippines<br />
                                     Department of Education<br />
                                     <br />
                                     Schools Division of Bukidnon
                                 </p>
 
-                                <h3 className="text-foreground" style={{ textAlign: 'center', margin: '8px 0', fontSize: '12pt', fontWeight: 'bold', letterSpacing: '0.5px' }}>MONTHLY REPORT OF OFFICIAL TRAVELS</h3>
-                                <p className="text-foreground" style={{ textAlign: 'center', margin: '8px 0', fontSize: '10pt' }}>(To be accomplished for each motor vehicle)</p>
+                                <h3 className="text-black" style={{ textAlign: 'center', margin: '8px 0', fontSize: '12pt', fontWeight: 'bold', letterSpacing: '0.5px' }}>MONTHLY REPORT OF OFFICIAL TRAVELS</h3>
+                                <p className="text-black" style={{ textAlign: 'center', margin: '8px 0', fontSize: '10pt' }}>(To be accomplished for each motor vehicle)</p>
 
-                                <div className="text-foreground" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '10pt' }}>
+                                <div className="text-black" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '10pt' }}>
                                     <div>
                                         Vehicle Plate No.
                                         <span
@@ -383,13 +383,13 @@ export default function MonthlyReport() {
                                 <table className="border border-border" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt' }}>
                                     <thead>
                                         <tr>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '5%', fontSize: '10pt' }}></th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>DATE</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '17%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '20%', fontSize: '10pt' }}>Gasoline Consumed (in Liters)</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Oil Used (in Liters)</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Grease Used</th>
-                                            <th className="border border-border text-foreground" style={{ textAlign: 'center', padding: '6px', fontSize: '10pt' }}>REMARKS</th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '5%', fontSize: '10pt' }}></th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>DATE</th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '17%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '20%', fontSize: '10pt' }}>Gasoline Consumed (in Liters)</th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Oil Used (in Liters)</th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Grease Used</th>
+                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', fontSize: '10pt' }}>REMARKS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -397,28 +397,28 @@ export default function MonthlyReport() {
                                             <>
                                                 {reportData.map((dayData, index) => (
                                                     <tr key={`${dayData.day}-${index}`}>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{dayData.day}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{formatDate(dayData.date)}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? Number((dayData.odometer_after - dayData.odometer_before).toFixed(1)) : (dayData.distance_traveled !== null ? Number(dayData.distance_traveled.toFixed(1)) : '')}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.grease_used || ''}</td>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.remarks || ''}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{dayData.day}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{formatDate(dayData.date)}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? Number((dayData.odometer_after - dayData.odometer_before).toFixed(1)) : (dayData.distance_traveled !== null ? Number(dayData.distance_traveled.toFixed(1)) : '')}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.grease_used || ''}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.remarks || ''}</td>
                                                     </tr>
                                                 ))}
                                                 <tr>
-                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
+                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                         {Number(reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0).toFixed(1))}
                                                     </td>
-                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                         {reportData.reduce((sum, item) => sum + (item.gasoline_consumed || 0), 0).toFixed(2)}
                                                     </td>
-                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                         {reportData.reduce((sum, item) => sum + (item.oil_used || 0), 0).toFixed(2)}
                                                     </td>
-                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
                                                         {reportData.reduce((sum, item) => sum + (Number(item.grease_used) || 0), 0).toFixed(2)}
                                                     </td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
@@ -428,7 +428,7 @@ export default function MonthlyReport() {
                                             <>
                                                 {rows.map((r) => (
                                                     <tr key={r}>
-                                                        <td className="text-foreground" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{r}</td>
+                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{r}</td>
                                                         <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
                                                         <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
                                                         <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
@@ -438,7 +438,7 @@ export default function MonthlyReport() {
                                                     </tr>
                                                 ))}
                                                 <tr>
-                                                    <td className="border border-border text-foreground font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
+                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
                                                     <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
@@ -451,19 +451,19 @@ export default function MonthlyReport() {
                                     </tbody>
                                 </table>
 
-                                <div className="text-foreground" style={{ marginTop: '18px', fontSize: '10pt' }}>
+                                <div className="text-black" style={{ marginTop: '18px', fontSize: '10pt' }}>
                                     <p style={{ fontSize: '10pt', marginBottom: '4px', textIndent: '1.5em' }}>I hereby certify to the correctness of the above statement and that the motor vehicle was used on strictly official business only.</p>
                                     <div style={{ height: '36px' }}></div>
                                 </div>
 
-                                <div className="text-foreground" style={{ marginTop: '30px', fontSize: '10pt', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div className="text-black" style={{ marginTop: '30px', fontSize: '10pt', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                         <div style={{ fontSize: '10pt', marginBottom: '4px' }}>APPROVED:</div>
                                         <div style={{ height: '40px', marginBottom: '4px' }}></div>
                                         <Input
                                             value={superintendentName}
                                             onChange={(e) => setSuperintendentName(e.target.value)}
-                                            className="h-8 w-[200px] border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[10pt] shadow-none focus-visible:ring-0"
+                                            className="text-black h-8 w-[200px] border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[10pt] shadow-none focus-visible:ring-0"
                                             placeholder="Name"
                                         />
                                         <div style={{ textAlign: 'center', fontSize: '10pt', width: '200px', marginTop: '4px' }}>Schools Division Superintendent</div>
@@ -475,7 +475,7 @@ export default function MonthlyReport() {
                                     </div>
                                 </div>
 
-                                <div className="text-foreground" style={{ marginTop: '18px', fontSize: '10pt', textAlign: 'left' }}>
+                                <div className="text-black" style={{ marginTop: '18px', fontSize: '10pt', textAlign: 'left' }}>
                                     <strong style={{ fontSize: '10pt' }}>Note:</strong>
                                     <div style={{ fontSize: '10pt', marginTop: '4px', textIndent: '1.5em', textAlign: 'justify' }}>This report should be accomplished in triplicate the original of which, supported by the originals of duly accomplished Driver's Record of travel (Form A) should be submitted, thru the Administrative Officer or his equivalent to the auditor concerned.</div>
                                 </div>

@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { ShieldCheck, CheckCircle, XCircle, Eye, EyeOff, Edit, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -50,6 +51,11 @@ export default function AdminUsers({ pendingUsers, allUsers }: { pendingUsers: U
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Confirm dialog state
+    const [confirmRejectOpen, setConfirmRejectOpen] = useState(false);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [pendingActionId, setPendingActionId] = useState<number | null>(null);
     
     // Edit form state
     const [editForm, setEditForm] = useState({
@@ -76,11 +82,15 @@ export default function AdminUsers({ pendingUsers, allUsers }: { pendingUsers: U
         });
     };
 
-    const rejectUser = (id: number) => {
-        if (!confirm('Are you sure you want to reject and remove this user?')) return;
-        
-        setProcessingId(id);
-        router.delete(`/admin/users/${id}/reject`, {
+    const openRejectConfirm = (id: number) => {
+        setPendingActionId(id);
+        setConfirmRejectOpen(true);
+    };
+
+    const handleRejectConfirm = () => {
+        if (pendingActionId === null) return;
+        setProcessingId(pendingActionId);
+        router.delete(`/admin/users/${pendingActionId}/reject`, {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('User has been rejected and removed.');
@@ -125,10 +135,14 @@ export default function AdminUsers({ pendingUsers, allUsers }: { pendingUsers: U
         });
     };
 
-    const deleteUser = (id: number) => {
-        if (!confirm('Are you sure you want to permanently delete this account?')) return;
-        
-        router.delete(`/admin/users/${id}`, {
+    const openDeleteConfirm = (id: number) => {
+        setPendingActionId(id);
+        setConfirmDeleteOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (pendingActionId === null) return;
+        router.delete(`/admin/users/${pendingActionId}`, {
             onSuccess: () => toast.success('User deleted successfully.'),
             onError: () => toast.error('Failed to delete user.')
         });
@@ -189,7 +203,7 @@ export default function AdminUsers({ pendingUsers, allUsers }: { pendingUsers: U
                                                         variant="outline" 
                                                         size="sm"
                                                         className="text-red-600 border-red-200 hover:bg-red-50"
-                                                        onClick={() => rejectUser(user.id)}
+                                                        onClick={() => openRejectConfirm(user.id)}
                                                         disabled={processingId === user.id}
                                                     >
                                                         <XCircle className="h-4 w-4 mr-1" />
@@ -257,7 +271,7 @@ export default function AdminUsers({ pendingUsers, allUsers }: { pendingUsers: U
                                                     size="icon"
                                                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                                     title="Delete User"
-                                                    onClick={() => deleteUser(user.id)}
+                                                    onClick={() => openDeleteConfirm(user.id)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -369,6 +383,28 @@ export default function AdminUsers({ pendingUsers, allUsers }: { pendingUsers: U
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* Reject User Confirmation */}
+            <ConfirmDialog
+                open={confirmRejectOpen}
+                onOpenChange={setConfirmRejectOpen}
+                onConfirm={handleRejectConfirm}
+                title="Reject User Registration"
+                description="This will permanently reject and remove this user's account. This action cannot be undone."
+                confirmLabel="Reject User"
+                variant="danger"
+            />
+
+            {/* Delete User Confirmation */}
+            <ConfirmDialog
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+                onConfirm={handleDeleteConfirm}
+                title="Delete User Account"
+                description="This will permanently delete this user's account and all associated data. This action cannot be undone."
+                confirmLabel="Delete Account"
+                variant="danger"
+            />
         </AppLayout>
     );
 }
