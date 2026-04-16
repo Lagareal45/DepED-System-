@@ -1,13 +1,13 @@
 {
-    "received_at": "2026-03-17 00:24:47",
-    "gasoline_final_balance": 9.09,
-    "gasoline_total_litres": null,
+    "received_at": "2026-04-16 00:49:07",
+    "gasoline_final_balance": 25,
+    "gasoline_total_litres": 95,
     "all_gasoline_fields": {
-        "balance_in_tank": 3.29,
-        "issued": null,
-        "purchased": 43.3,
-        "total_litres": null,
-        "deducted": 37.5,
-        "final_balance": 9.09
+        "balance_in_tank": 25,
+        "issued": 50,
+        "purchased": 20,
+        "total_litres": 95,
+        "deducted": 20,
+        "final_balance": 25
     }
 }

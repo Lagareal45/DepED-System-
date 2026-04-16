@@ -3,6 +3,7 @@ import { Plus, X, Printer } from 'lucide-react';
 import { printOrSavePDF } from '@/lib/pdf-utils';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import ConfirmDialog from '@/components/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +39,7 @@ export function GasSlipForm() {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [showReview, setShowReview] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
     const handleChange = (field: string, value: string) => {
         setFormData({ ...formData, [field]: value });
@@ -516,13 +518,23 @@ export function GasSlipForm() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={handleReset} disabled={submitting}>
+                <Button type="button" variant="outline" onClick={() => setIsResetDialogOpen(true)} disabled={submitting}>
                     Reset
                 </Button>
                 <Button type="button" onClick={() => setShowReview(true)} disabled={submitting || loadingSlipNo}>
                     Review
                 </Button>
             </div>
+
+            <ConfirmDialog
+                open={isResetDialogOpen}
+                onOpenChange={setIsResetDialogOpen}
+                onConfirm={handleReset}
+                title="Confirm Reset"
+                description="Are you sure you want to reset? This will clear all entered information and cannot be undone."
+                confirmLabel="Reset"
+                variant="danger"
+            />
 
             {submitError && (
                 <p className="text-sm text-destructive">{submitError}</p>

@@ -3,6 +3,7 @@ import { Plus, X, Printer } from 'lucide-react';
 import { printOrSavePDF } from '@/lib/pdf-utils';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import ConfirmDialog from '@/components/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +61,7 @@ export function TripTicketForm() {
     const [downloading, setDownloading] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submittedDocumentNo, setSubmittedDocumentNo] = useState<string | null>(null);
+    const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
     const addDestination = () => {
         setFormData({
@@ -774,13 +776,23 @@ export function TripTicketForm() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={handleReset} disabled={submitting}>
+                <Button type="button" variant="outline" onClick={() => setIsResetDialogOpen(true)} disabled={submitting}>
                     Reset
                 </Button>
                 <Button type="button" onClick={() => setShowReview(true)} disabled={submitting || loadingTicketNo}>
                     Review
                 </Button>
             </div>
+
+            <ConfirmDialog
+                open={isResetDialogOpen}
+                onOpenChange={setIsResetDialogOpen}
+                onConfirm={handleReset}
+                title="Confirm Reset"
+                description="Are you sure you want to reset? This will clear all entered information and cannot be undone."
+                confirmLabel="Reset"
+                variant="danger"
+            />
 
             {submitError && (
                 <p className="text-sm text-destructive">{submitError}</p>
