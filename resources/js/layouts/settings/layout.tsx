@@ -50,10 +50,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
     if (!isAuthenticated) {
         return (
-            <AdminPasswordPrompt 
+            <AdminPasswordPrompt
                 onSuccess={() => {
                     setIsAuthenticated(true);
-                }} 
+                }}
             />
         );
     }
