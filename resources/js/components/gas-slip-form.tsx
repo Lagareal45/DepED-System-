@@ -7,6 +7,23 @@ import ConfirmDialog from '@/components/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const DEFAULT_DRIVERS = [
+    'Alex Jenico Valdez',
+    'Joseph Panogalinga',
+    'Ruel S. Amoy',
+    'Kerwin Suazo',
+    'Ken Alistair Melendez'
+];
+
+const DRIVER_VEHICLE_MAP: Record<string, { vehicleType: string, plateNo: string }> = {
+    'Alex Jenico Valdez': { vehicleType: 'TOYOTA HIACE VAN', plateNo: 'P5J1728' },
+    'Joseph Panogalinga': { vehicleType: 'MITSUBISHI STRADA PICK-UP', plateNo: '030110' },
+    'Ruel S. Amoy': { vehicleType: 'ISUZU MUX', plateNo: 'SAA6598' },
+    'Kerwin Suazo': { vehicleType: 'MITSUBISHI TRITON', plateNo: 'SCA2543' },
+    'Ken Alistair Melendez': { vehicleType: 'STRADA OLD PICK-UP', plateNo: 'SFM 477' },
+};
 
 export function GasSlipForm() {
     const emptyForm = useMemo(
@@ -41,7 +58,42 @@ export function GasSlipForm() {
     const [downloading, setDownloading] = useState(false);
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
+    const [customDrivers, setCustomDrivers] = useState<string[]>([]);
+    const [isAddingDriver, setIsAddingDriver] = useState(false);
+    const [newDriverName, setNewDriverName] = useState('');
+
+    useEffect(() => {
+        const saved = localStorage.getItem('customDrivers');
+        if (saved) {
+            try {
+                setCustomDrivers(JSON.parse(saved));
+            } catch (e) { }
+        }
+    }, []);
+
+    const handleAddDriver = () => {
+        if (newDriverName.trim()) {
+            const updated = [...customDrivers, newDriverName.trim()];
+            setCustomDrivers(updated);
+            localStorage.setItem('customDrivers', JSON.stringify(updated));
+            handleChange('driver', newDriverName.trim());
+            setNewDriverName('');
+            setIsAddingDriver(false);
+        }
+    };
+
+    const allDrivers = [...DEFAULT_DRIVERS, ...customDrivers];
+
     const handleChange = (field: string, value: string) => {
+        if (field === 'driver' && DRIVER_VEHICLE_MAP[value]) {
+            setFormData({
+                ...formData,
+                driver: value,
+                vehicleType: DRIVER_VEHICLE_MAP[value].vehicleType,
+                plateNo: DRIVER_VEHICLE_MAP[value].plateNo,
+            });
+            return;
+        }
         setFormData({ ...formData, [field]: value });
     };
 
@@ -204,7 +256,7 @@ export function GasSlipForm() {
             }
         };
         initializeForm();
-         
+
     }, []);
 
     const submitToServer = async () => {
@@ -352,13 +404,37 @@ export function GasSlipForm() {
 
                     <div className="space-y-2">
                         <Label htmlFor="driver">Driver</Label>
-                        <Input
-                            id="driver"
-                            value={formData.driver}
-                            onChange={(e) => handleChange('driver', e.target.value)}
-                            placeholder="Enter driver name"
-                            required
-                        />
+                        {isAddingDriver ? (
+                            <div className="flex gap-2">
+                                <Input
+                                    value={newDriverName}
+                                    onChange={(e) => setNewDriverName(e.target.value)}
+                                    placeholder="Enter new driver name"
+                                    autoFocus
+                                />
+                                <Button type="button" onClick={handleAddDriver}>Add</Button>
+                                <Button type="button" variant="outline" onClick={() => setIsAddingDriver(false)}>Cancel</Button>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                <Select
+                                    value={formData.driver}
+                                    onValueChange={(value) => handleChange('driver', value)}
+                                >
+                                    <SelectTrigger id="driver" className="flex-1">
+                                        <SelectValue placeholder="Select driver name" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {allDrivers.map(d => (
+                                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button type="button" variant="outline" onClick={() => setIsAddingDriver(true)}>
+                                    + New
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">

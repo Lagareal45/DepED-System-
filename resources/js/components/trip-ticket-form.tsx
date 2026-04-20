@@ -8,13 +8,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Destination {
     id: string;
     value: string;
 }
 
+const DEFAULT_DRIVERS = [
+    'Alex Jenico Valdez',
+    'Joseph Panogalinga',
+    'Ruel S. Amoy',
+    'Kerwin Suazo',
+    'Ken Alistair Melendez'
+];
+
+const DRIVER_VEHICLE_MAP: Record<string, { vehicle: string, plateNo: string }> = {
+    'Alex Jenico Valdez': { vehicle: 'TOYOTA HIACE VAN', plateNo: 'P5J1728' },
+    'Joseph Panogalinga': { vehicle: 'MITSUBISHI STRADA PICK-UP', plateNo: '030110' },
+    'Ruel S. Amoy': { vehicle: 'ISUZU MUX', plateNo: 'SAA6598' },
+    'Kerwin Suazo': { vehicle: 'MITSUBISHI TRITON', plateNo: 'SCA2543' },
+    'Ken Alistair Melendez': { vehicle: 'STRADA OLD PICK-UP', plateNo: 'SFM 477' },
+};
+
 export function TripTicketForm() {
+
     const emptyForm = useMemo(
         () => ({
             documentNo: '',
@@ -63,6 +81,32 @@ export function TripTicketForm() {
     const [submittedDocumentNo, setSubmittedDocumentNo] = useState<string | null>(null);
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
+    const [customDrivers, setCustomDrivers] = useState<string[]>([]);
+    const [isAddingDriver, setIsAddingDriver] = useState(false);
+    const [newDriverName, setNewDriverName] = useState('');
+
+    useEffect(() => {
+        const saved = localStorage.getItem('customDrivers');
+        if (saved) {
+            try {
+                setCustomDrivers(JSON.parse(saved));
+            } catch (e) { }
+        }
+    }, []);
+
+    const handleAddDriver = () => {
+        if (newDriverName.trim()) {
+            const updated = [...customDrivers, newDriverName.trim()];
+            setCustomDrivers(updated);
+            localStorage.setItem('customDrivers', JSON.stringify(updated));
+            handleChange('driver', newDriverName.trim());
+            setNewDriverName('');
+            setIsAddingDriver(false);
+        }
+    };
+
+    const allDrivers = [...DEFAULT_DRIVERS, ...customDrivers];
+
     const addDestination = () => {
         setFormData({
             ...formData,
@@ -89,6 +133,15 @@ export function TripTicketForm() {
     };
 
     const handleChange = (field: string, value: string) => {
+        if (field === 'driver' && DRIVER_VEHICLE_MAP[value]) {
+            setFormData({
+                ...formData,
+                driver: value,
+                vehicle: DRIVER_VEHICLE_MAP[value].vehicle,
+                plateNo: DRIVER_VEHICLE_MAP[value].plateNo,
+            });
+            return;
+        }
         setFormData({ ...formData, [field]: value });
     };
 
@@ -244,7 +297,7 @@ export function TripTicketForm() {
         setDownloading(true);
         try {
             // Create a snapshot of current form data to ensure latest values are used
-            const currentFormData = { 
+            const currentFormData = {
                 ...formData,
                 destinations: formData.destinations.map(d => d.value).filter(Boolean),
                 gasolineDeducted: calculateGasolineDeducted() !== 0 ? calculateGasolineDeducted().toFixed(2) : ''
@@ -322,13 +375,37 @@ export function TripTicketForm() {
 
                     <div className="space-y-2">
                         <Label htmlFor="driver">Driver</Label>
-                        <Input
-                            id="driver"
-                            value={formData.driver}
-                            onChange={(e) => handleChange('driver', e.target.value)}
-                            placeholder="Enter driver name"
-                            required
-                        />
+                        {isAddingDriver ? (
+                            <div className="flex gap-2">
+                                <Input
+                                    value={newDriverName}
+                                    onChange={(e) => setNewDriverName(e.target.value)}
+                                    placeholder="Enter new driver name"
+                                    autoFocus
+                                />
+                                <Button type="button" onClick={handleAddDriver}>Add</Button>
+                                <Button type="button" variant="outline" onClick={() => setIsAddingDriver(false)}>Cancel</Button>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                <Select
+                                    value={formData.driver}
+                                    onValueChange={(value) => handleChange('driver', value)}
+                                >
+                                    <SelectTrigger id="driver" className="flex-1">
+                                        <SelectValue placeholder="Select driver name" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {allDrivers.map(d => (
+                                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button type="button" variant="outline" onClick={() => setIsAddingDriver(true)}>
+                                    + New
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">
