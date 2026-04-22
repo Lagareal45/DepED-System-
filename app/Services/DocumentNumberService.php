@@ -21,13 +21,27 @@ class DocumentNumberService
     {
         $today = Carbon::now()->format('Y-m-d');
 
-        // Count all trip tickets to ensure numbering is continuous across days
-        // Gas slips are either created from trip tickets (same number) 
-        // or independently, but we use trip tickets as the primary sequence
-        $tripTicketsCount = TripTicket::count();
+        // To avoid conflicts and handle drafts claiming numbers, we determine the highest assigned sequence
+        // by looking at both TripTickets and Drafts instead of just a raw count.
+        $tripTicketsDocs = TripTicket::pluck('document_no')->toArray();
+        $draftsDocs = \App\Models\Draft::whereNotNull('document_no')->pluck('document_no')->toArray();
+        
+        $allDocs = array_merge($tripTicketsDocs, $draftsDocs);
+        
+        $maxSequence = 0;
+        foreach ($allDocs as $doc) {
+            $parts = explode('-', $doc);
+            if (count($parts) >= 4) {
+                // The sequence number is the last part: YYYY-MM-DD-###
+                $sequence = (int) end($parts);
+                if ($sequence > $maxSequence) {
+                    $maxSequence = $sequence;
+                }
+            }
+        }
 
         // Generate the next number with format: YYYY-MM-DD-###
-        $nextNumber = str_pad((string) ($tripTicketsCount + 1), 3, '0', STR_PAD_LEFT);
+        $nextNumber = str_pad((string) ($maxSequence + 1), 3, '0', STR_PAD_LEFT);
         return "{$today}-{$nextNumber}";
     }
 }

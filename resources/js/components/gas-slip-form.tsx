@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { Plus, X, Printer } from 'lucide-react';
 import { printOrSavePDF } from '@/lib/pdf-utils';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import ConfirmDialog from '@/components/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -250,14 +251,71 @@ export function GasSlipForm() {
                     } catch { /* ignore */ }
                 }
             }
-            // If we did not use a trip ticket document number, fetch the next slip number
-            if (!usedTripTicketDocNo) {
+            // If not found in query string by documentNo, look for draft_id
+            const draftId = new URLSearchParams(window.location.search).get('draft_id');
+            if (draftId && !docNo) {
+                try {
+                    const res = await fetch('/drafts', {
+                        headers: { Accept: 'application/json' },
+                    });
+                    if (res.ok) {
+                        const drafts = await res.json();
+                        const foundDraft = drafts.find((d: any) => d.id === Number(draftId));
+                        if (foundDraft && foundDraft.data) {
+                            setFormData((prev) => ({ ...prev, ...foundDraft.data }));
+                            usedTripTicketDocNo = true; // Use this flag to skip fetchNextSlipNo temporarily if needed, though we probably should fetch if docNo is empty.
+                            if (foundDraft.document_no) docNo = foundDraft.document_no;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load draft');
+                }
+            }
+
+            // If we did not use a trip ticket document number or draft with document_no, fetch the next slip number
+            if (!docNo) {
                 await fetchNextSlipNo();
             }
         };
         initializeForm();
 
     }, []);
+
+    const saveDraft = async (isAutoSave = false) => {
+        try {
+            const xsrf = getCookie('XSRF-TOKEN');
+            const draftId = new URLSearchParams(window.location.search).get('draft_id');
+            const dataToSave = { ...formData };
+            
+            const payload = {
+                id: draftId || undefined,
+                form_type: 'Gas Slip',
+                document_no: formData.documentNo || null,
+                data: dataToSave
+            };
+
+            const res = await fetch('/drafts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(xsrf ? { 'X-XSRF-TOKEN': decodeURIComponent(xsrf) } : {}),
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error('Failed to save draft');
+            
+            if (!isAutoSave) {
+                toast.success('Draft stored securely.', {
+                    description: 'Your progress has been saved. You may resume editing this form from your Dashboard at your convenience.',
+                });
+            }
+        } catch (err) {
+            console.error('Draft save error', err);
+        }
+    };
 
     const submitToServer = async () => {
         setSubmitting(true);
@@ -300,10 +358,26 @@ export function GasSlipForm() {
                 throw new Error(text || 'Failed to submit gas slip.');
             }
 
+            // Delete draft if it was loaded
+            const draftId = new URLSearchParams(window.location.search).get('draft_id');
+            if (draftId) {
+                await fetch(`/drafts/${draftId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(xsrfDecoded ? { 'X-XSRF-TOKEN': xsrfDecoded } : {}),
+                    }
+                });
+            }
+
             setShowReview(false);
             await handleReset();
         } catch (err) {
             setSubmitError(err instanceof Error ? err.message : 'Failed to submit gas slip.');
+            // Auto save as draft if user cannot finish fill up or server error
+            saveDraft(true);
+            setSubmitError(prev => prev + " (Your inputs were automatically saved to Drafts)");
         } finally {
             setSubmitting(false);
         }
@@ -596,6 +670,9 @@ export function GasSlipForm() {
             <div className="flex justify-end gap-4">
                 <Button type="button" variant="outline" onClick={() => setIsResetDialogOpen(true)} disabled={submitting}>
                     Reset
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => saveDraft(false)} disabled={submitting}>
+                    Save as Draft
                 </Button>
                 <Button type="button" onClick={() => setShowReview(true)} disabled={submitting || loadingSlipNo}>
                     Review

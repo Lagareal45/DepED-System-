@@ -52,6 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Dashboard Data API
     Route::get('api/dashboard/data', [DashboardController::class, 'getData'])->name('api.dashboard.data');
+    
+    // Drafts API
+    Route::get('drafts', [App\Http\Controllers\DraftController::class, 'index'])->name('drafts.index');
+    Route::post('drafts', [App\Http\Controllers\DraftController::class, 'store'])->name('drafts.store');
+    Route::delete('drafts/{draft}', [App\Http\Controllers\DraftController::class, 'destroy'])->name('drafts.destroy');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->group(function () {

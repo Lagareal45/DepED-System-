@@ -43,12 +43,23 @@ export interface ActivityLog {
     data: any;
 }
 
+export interface DraftItem {
+    id: number;
+    user_id: number | null;
+    form_type: string;
+    document_no: string | null;
+    data: any;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface DashboardDataResponse {
     metrics: DashboardMetrics;
     monthlyData: MonthlyData[];
     trafficSources: TrafficSource[];
     trafficSourcesList: TrafficSourceItem[];
     activities: ActivityLog[];
+    drafts: DraftItem[];
 }
 
 class DashboardService {

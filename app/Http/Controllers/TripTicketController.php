@@ -171,6 +171,7 @@ class TripTicketController extends Controller
                         'day' => $dayOfMonth,
                         'date' => $dateKey,
                         'vehicle' => $ticket->vehicle ?? '',
+                        'plate_no' => $ticket->plate_no ?? '',
                         'distance_start' => $ticket->speed_at_beginning ?? '',
                         'distance_end' => $ticket->speed_at_end ?? '',
                         'distance_traveled' => null,

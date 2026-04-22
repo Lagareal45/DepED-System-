@@ -157,6 +157,7 @@ export const generateTripTicketHTML = (data: any) => {
         .cert .statement { margin-bottom: 4px; }
         .cert .sig-wrap { display: inline-block; text-align: center; margin-top: 2px; }
         .cert .sig-line { border-bottom: 1px solid #000; min-width: 180px; padding: 0 4px; height: 14px; margin-bottom: 1px; white-space: nowrap; text-align: center; color: #000; }
+        .cert .sig-line-multi { border-bottom: 1px solid #000; min-width: 180px; max-width: 100%; padding: 0 4px; min-height: 14px; margin-bottom: 1px; white-space: pre-wrap; text-align: center; color: #000; word-wrap: break-word; display: inline-block; }
         .cert .sig-label { font-size: 9pt; margin-top: 2px; }
         @page { margin: 0; }
         @media print { body { margin: 10mm; } }
@@ -383,10 +384,10 @@ export const generateTripTicketHTML = (data: any) => {
                 <div class="sig-label">Driver</div>
             </div>
         </div>
-        <div class="cert">
-            <div class="statement">I/WE HEREBY CERTIFY that I/we used this service vehicle on official travel as stated above.</div>
-            <div class="sig-wrap">
-                <div class="sig-line">${authorizedPassengers}</div>
+        <div class="cert" style="text-align: center; margin-top: 16px;">
+            <div class="statement" style="text-align: left;">I/WE HEREBY CERTIFY that I/we used this service vehicle on official travel as stated above.</div>
+            <div class="sig-wrap" style="max-width: 100%;">
+                <div class="sig-line-multi">${authorizedPassengers}</div>
                 <div class="sig-label">Passenger/s</div>
             </div>
         </div>

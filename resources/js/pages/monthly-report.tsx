@@ -282,8 +282,8 @@ export default function MonthlyReport() {
 
             <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-xl p-4">
                 {/* Datepicker (left), Search bar (center), Generate button (right) */}
-                <div className="flex items-center justify-between gap-3 mb-2">
-                    <div className="relative flex items-center">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-2">
+                    <div className="relative flex items-center w-full sm:w-auto">
                         <span className="absolute left-2 text-muted-foreground">
                             <Calendar size={16} />
                         </span>
@@ -291,10 +291,10 @@ export default function MonthlyReport() {
                             type="month"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="pl-8 min-w-[180px] bg-white text-black border border-gray-300 [color-scheme:light]"
+                            className="pl-8 w-full sm:min-w-[180px] bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
-                    <div className="relative flex items-center flex-1 max-w-md mx-auto">
+                    <div className="relative flex items-center flex-1 w-full sm:max-w-md">
                         <span className="absolute left-2 text-muted-foreground">
                             <Search size={16} />
                         </span>
@@ -306,7 +306,7 @@ export default function MonthlyReport() {
                             className="pl-8 w-full bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
-                    <Button onClick={handleGenerate} disabled={loading}>
+                    <Button onClick={handleGenerate} disabled={loading} className="w-full sm:w-auto">
                         {loading ? 'Generating...' : 'Generate'}
                     </Button>
                 </div>
@@ -380,98 +380,98 @@ export default function MonthlyReport() {
                                     </div>
                                 </div>
 
-                                <table className="border border-border" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt' }}>
-                                    <thead>
-                                        <tr>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '5%', fontSize: '10pt' }}></th>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>DATE</th>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '17%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '20%', fontSize: '10pt' }}>Gasoline Consumed (in Liters)</th>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Oil Used (in Liters)</th>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Grease Used</th>
-                                            <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', fontSize: '10pt' }}>REMARKS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {reportData.length > 0 ? (
-                                            <>
-                                                {reportData.map((dayData, index) => (
-                                                    <tr key={`${dayData.day}-${index}`}>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{dayData.day}</td>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{formatDate(dayData.date)}</td>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? Number((dayData.odometer_after - dayData.odometer_before).toFixed(1)) : (dayData.distance_traveled !== null ? Number(dayData.distance_traveled.toFixed(1)) : '')}</td>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.grease_used || ''}</td>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.remarks || ''}</td>
+                                <div className="overflow-x-auto w-full pb-4 mt-4">
+                                    <table className="border border-border min-w-[800px] sm:min-w-full" style={{ borderCollapse: 'collapse', fontSize: '10pt' }}>
+                                        <thead>
+                                            <tr>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '5%', fontSize: '10pt' }}></th>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>DATE</th>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '17%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '20%', fontSize: '10pt' }}>Gasoline Consumed (in Liters)</th>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Oil Used (in Liters)</th>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '15%', fontSize: '10pt' }}>Grease Used</th>
+                                                <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', fontSize: '10pt' }}>REMARKS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {reportData.length > 0 ? (
+                                                <>
+                                                    {reportData.map((dayData, index) => (
+                                                        <tr key={`${dayData.day}-${index}`}>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{dayData.day}</td>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{formatDate(dayData.date)}</td>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.odometer_before !== null && dayData.odometer_after !== null ? Number((dayData.odometer_after - dayData.odometer_before).toFixed(1)) : (dayData.distance_traveled !== null ? Number(dayData.distance_traveled.toFixed(1)) : '')}</td>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.gasoline_consumed !== null ? dayData.gasoline_consumed.toFixed(2) : ''}</td>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.oil_used ? dayData.oil_used.toFixed(2) : ''}</td>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.grease_used || ''}</td>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{dayData.remarks || ''}</td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr>
+                                                        <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                        <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                            {Number(reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0).toFixed(1))}
+                                                        </td>
+                                                        <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                            {reportData.reduce((sum, item) => sum + (item.gasoline_consumed || 0), 0).toFixed(2)}
+                                                        </td>
+                                                        <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                            {reportData.reduce((sum, item) => sum + (item.oil_used || 0), 0).toFixed(2)}
+                                                        </td>
+                                                        <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                            {reportData.reduce((sum, item) => sum + (Number(item.grease_used) || 0), 0).toFixed(2)}
+                                                        </td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
                                                     </tr>
-                                                ))}
-                                                <tr>
-                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                        {Number(reportData.reduce((sum, item) => sum + (item.distance_traveled || 0), 0).toFixed(1))}
-                                                    </td>
-                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                        {reportData.reduce((sum, item) => sum + (item.gasoline_consumed || 0), 0).toFixed(2)}
-                                                    </td>
-                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                        {reportData.reduce((sum, item) => sum + (item.oil_used || 0), 0).toFixed(2)}
-                                                    </td>
-                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                        {reportData.reduce((sum, item) => sum + (Number(item.grease_used) || 0), 0).toFixed(2)}
-                                                    </td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                </tr>
-                                            </>
-                                        ) : (
-                                            <>
-                                                {rows.map((r) => (
-                                                    <tr key={r}>
-                                                        <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{r}</td>
-                                                        <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
-                                                        <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
-                                                        <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
-                                                        <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
-                                                        <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
-                                                        <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {rows.map((r) => (
+                                                        <tr key={r}>
+                                                            <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', textAlign: 'left', fontSize: '10pt' }}>{r}</td>
+                                                            <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                            <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                            <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                            <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                            <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                            <td style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt' }}></td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr>
+                                                        <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
+                                                        <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
                                                     </tr>
-                                                ))}
-                                                <tr>
-                                                    <td className="border border-border text-black font-bold" style={{ padding: '8px', fontSize: '10pt' }}>TOTALS:</td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                    <td className="border border-border" style={{ padding: '8px', fontSize: '10pt' }}></td>
-                                                </tr>
-                                            </>
-                                        )}
-                                    </tbody>
-                                </table>
+                                                </>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
 
                                 <div className="text-black" style={{ marginTop: '18px', fontSize: '10pt' }}>
                                     <p style={{ fontSize: '10pt', marginBottom: '4px', textIndent: '1.5em' }}>I hereby certify to the correctness of the above statement and that the motor vehicle was used on strictly official business only.</p>
                                     <div style={{ height: '36px' }}></div>
                                 </div>
 
-                                <div className="text-black" style={{ marginTop: '30px', fontSize: '10pt', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                        <div style={{ fontSize: '10pt', marginBottom: '4px' }}>APPROVED:</div>
-                                        <div style={{ height: '40px', marginBottom: '4px' }}></div>
+                                <div className="text-black flex flex-col sm:flex-row justify-between items-start sm:items-end gap-12 mt-8 text-[10pt]">
+                                    <div className="flex flex-col items-start w-full sm:w-auto">
+                                        <div className="mb-8">APPROVED:</div>
                                         <Input
                                             value={superintendentName}
                                             onChange={(e) => setSuperintendentName(e.target.value)}
-                                            className="text-black h-8 w-[200px] border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[10pt] shadow-none focus-visible:ring-0"
+                                            className="text-black h-8 w-full sm:w-[200px] border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[10pt] shadow-none focus-visible:ring-0"
                                             placeholder="Name"
                                         />
-                                        <div style={{ textAlign: 'center', fontSize: '10pt', width: '200px', marginTop: '4px' }}>Schools Division Superintendent</div>
+                                        <div className="text-center w-full sm:w-[200px] mt-1">Schools Division Superintendent</div>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 'auto' }}>
-                                        <div style={{ height: '40px', marginBottom: '4px' }}></div>
-                                        <div style={{ borderBottom: '1px solid var(--border)', width: '200px', marginBottom: '4px', textAlign: 'center', paddingBottom: '2px' }}>{(reportInfo?.driver || '').toUpperCase()}</div>
-                                        <div style={{ textAlign: 'center', fontSize: '10pt' }}>Driver</div>
+                                    <div className="flex flex-col items-center w-full sm:w-auto">
+                                        <div className="border-b border-border w-full sm:w-[200px] mb-1 text-center pb-1">{(reportInfo?.driver || '').toUpperCase() || '\u00A0'}</div>
+                                        <div className="text-center">Driver</div>
                                     </div>
                                 </div>
 

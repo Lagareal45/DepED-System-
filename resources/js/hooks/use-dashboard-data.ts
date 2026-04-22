@@ -7,6 +7,7 @@ interface DashboardData {
     trafficSources: TrafficSource[];
     trafficSourcesList: TrafficSourceItem[];
     activities: ActivityLog[];
+    drafts: import('@/services/dashboard-service').DraftItem[];
     loading: boolean;
     error: string | null;
     refreshData: () => Promise<void>;
@@ -18,6 +19,7 @@ export function useDashboardData(): DashboardData {
     const [trafficSources, setTrafficSources] = useState<TrafficSource[]>([]);
     const [trafficSourcesList, setTrafficSourcesList] = useState<TrafficSourceItem[]>([]);
     const [activities, setActivities] = useState<ActivityLog[]>([]);
+    const [drafts, setDrafts] = useState<import('@/services/dashboard-service').DraftItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +35,7 @@ export function useDashboardData(): DashboardData {
             setTrafficSources(data.trafficSources);
             setTrafficSourcesList(data.trafficSourcesList);
             setActivities(data.activities);
+            setDrafts(data.drafts || []);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
             console.error('Dashboard data fetch error:', err);
@@ -51,6 +54,7 @@ export function useDashboardData(): DashboardData {
         trafficSources,
         trafficSourcesList,
         activities,
+        drafts,
         loading,
         error,
         refreshData: fetchData

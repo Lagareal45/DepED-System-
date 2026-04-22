@@ -162,6 +162,9 @@ class DashboardController extends Controller
         // Limit to 10 total
         $activities = array_slice($activities, 0, 10);
 
+        // Fetch Drafts
+        $drafts = \App\Models\Draft::where('user_id', $request->user()->id)->orderBy('updated_at', 'desc')->get();
+
         return response()->json([
             'metrics' => [
                 'totalTripTickets' => $totalTripTickets,
@@ -177,6 +180,7 @@ class DashboardController extends Controller
             'trafficSources' => $trafficSources,
             'trafficSourcesList' => $trafficSourcesList,
             'activities' => $activities,
+            'drafts' => $drafts,
         ]);
     }
     

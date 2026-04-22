@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { Plus, X, Printer } from 'lucide-react';
 import { printOrSavePDF } from '@/lib/pdf-utils';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import ConfirmDialog from '@/components/confirm-dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -86,12 +87,36 @@ export function TripTicketForm() {
     const [newDriverName, setNewDriverName] = useState('');
 
     useEffect(() => {
+        // Load custom drivers
         const saved = localStorage.getItem('customDrivers');
         if (saved) {
             try {
                 setCustomDrivers(JSON.parse(saved));
             } catch (e) { }
         }
+
+        // Check for draft_id and load draft if present
+        const loadDraft = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const draftId = params.get('draft_id');
+            if (draftId) {
+                try {
+                    const res = await fetch('/drafts', {
+                        headers: { Accept: 'application/json' },
+                    });
+                    if (res.ok) {
+                        const drafts = await res.json();
+                        const foundDraft = drafts.find((d: any) => d.id === Number(draftId));
+                        if (foundDraft && foundDraft.data) {
+                            setFormData({ ...emptyForm, ...foundDraft.data });
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load draft');
+                }
+            }
+        };
+        loadDraft();
     }, []);
 
     const handleAddDriver = () => {
@@ -191,9 +216,47 @@ export function TripTicketForm() {
     };
 
     useEffect(() => {
-        fetchNextTicketNo();
-
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('draft_id')) {
+            fetchNextTicketNo();
+        }
     }, []);
+
+    const saveDraft = async (isAutoSave = false) => {
+        try {
+            const xsrf = getCookie('XSRF-TOKEN');
+            const draftId = new URLSearchParams(window.location.search).get('draft_id');
+            const dataToSave = { ...formData };
+            
+            const payload = {
+                id: draftId || undefined,
+                form_type: 'Trip Ticket',
+                document_no: formData.documentNo || null,
+                data: dataToSave
+            };
+
+            const res = await fetch('/drafts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(xsrf ? { 'X-XSRF-TOKEN': decodeURIComponent(xsrf) } : {}),
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error('Failed to save draft');
+            
+            if (!isAutoSave) {
+                toast.success('Draft stored securely.', {
+                    description: 'Your progress has been saved. You may resume editing this form from your Dashboard at your convenience.',
+                });
+            }
+        } catch (err) {
+            console.error('Draft save error', err);
+        }
+    };
 
     const submitToServer = async () => {
         setSubmitting(true);
@@ -280,12 +343,28 @@ export function TripTicketForm() {
                 })
             );
 
+            // Delete draft if it was loaded
+            const draftId = new URLSearchParams(window.location.search).get('draft_id');
+            if (draftId) {
+                await fetch(`/drafts/${draftId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(xsrfDecoded ? { 'X-XSRF-TOKEN': xsrfDecoded } : {}),
+                    }
+                });
+            }
+
             // Redirect to gas slips page with documentNo as query param after 2 seconds
             setTimeout(() => {
                 router.visit(`/gas-slips?documentNo=${encodeURIComponent(documentNo)}`);
             }, 2000);
         } catch (err) {
             setSubmitError(err instanceof Error ? err.message : 'Failed to submit trip ticket.');
+            // Auto save as draft if user cannot finish fill up or server error
+            saveDraft(true);
+            setSubmitError(prev => prev + " (Your inputs were automatically saved to Drafts)");
         } finally {
             setSubmitting(false);
         }
@@ -855,6 +934,9 @@ export function TripTicketForm() {
             <div className="flex justify-end gap-4">
                 <Button type="button" variant="outline" onClick={() => setIsResetDialogOpen(true)} disabled={submitting}>
                     Reset
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => saveDraft(false)} disabled={submitting}>
+                    Save as Draft
                 </Button>
                 <Button type="button" onClick={() => setShowReview(true)} disabled={submitting || loadingTicketNo}>
                     Review

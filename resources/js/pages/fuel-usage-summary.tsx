@@ -348,16 +348,15 @@ export default function FuelUsageSummary() {
                 const totalDistanceNumber = (start !== '' && end !== '') ? Number(end) - Number(start) : null;
                 const totalDistance = totalDistanceNumber !== null ? totalDistanceNumber : '';
                 const fuelUsedValue = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
-                const fuelUsed = Number(fuelUsedValue);
+                const fuelUsed = parseFloat(Number(fuelUsedValue).toFixed(2));
                 const normalTravelKmPerLiter = 7;
                 const distancePerLiter = totalDistanceNumber !== null ? (fuelUsed > 0 ? (totalDistanceNumber / fuelUsed).toFixed(2) : '0.00') : '';
                 const totalLitersWithAllowance = totalDistanceNumber !== null ? ((totalDistanceNumber / normalTravelKmPerLiter) * 1.1).toFixed(2) : '';
                 const excess = totalLitersWithAllowance !== '' ? (fuelUsed - Number(totalLitersWithAllowance)).toFixed(2) : '';
                 // Plate number logic matches the on-screen table
-                const firstRow = reportData[0] || {};
-                const plateNo = row.plate_no || (reportInfo && reportInfo.plate_no) || firstRow.plate_no || '';
+                const plateNo = row.plate_no || '';
                 // Number of Cylinder logic matches the on-screen table
-                const numberOfCylinder = row.number_of_cylinder || (reportInfo && reportInfo.number_of_cylinder) || firstRow.number_of_cylinder || '';
+                const numberOfCylinder = row.number_of_cylinder || '';
                 return `<tr>
                     <td style="border: 1px dotted #000; padding: 8px; text-align: center;">${row.vehicle_type || row.vehicle || ''}</td>
                     <td style="border: 1px dotted #000; padding: 8px; text-align: center;">${plateNo}</td>
@@ -471,8 +470,8 @@ export default function FuelUsageSummary() {
     return (
         <AppLayout breadcrumbs={[{ title: 'Fuel Usage Summary', href: '/fuel-usage-summary' }]}> {/* Sidebar and layout */}
             <div className="flex min-h-0 flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className="relative flex items-center">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
+                    <div className="relative flex items-center w-full sm:w-auto">
                         <span className="absolute left-2 text-muted-foreground">
                             <Calendar size={16} />
                         </span>
@@ -480,10 +479,10 @@ export default function FuelUsageSummary() {
                             type="month"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="pl-8 min-w-[180px] bg-white text-black border border-gray-300 [color-scheme:light]"
+                            className="pl-8 w-full sm:min-w-[180px] bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
-                    <div className="relative flex items-center flex-1 max-w-md mx-auto">
+                    <div className="relative flex items-center flex-1 w-full sm:max-w-md">
                         <span className="absolute left-2 text-muted-foreground">
                             <Search size={16} />
                         </span>
@@ -495,7 +494,7 @@ export default function FuelUsageSummary() {
                             className="pl-8 w-full bg-white text-black border border-gray-300 [color-scheme:light]"
                         />
                     </div>
-                    <Button onClick={() => void handleGenerate()} disabled={loading}>
+                    <Button onClick={() => void handleGenerate()} disabled={loading} className="w-full sm:w-auto">
                         {loading ? 'Generating...' : 'Generate'}
                     </Button>
                 </div>
@@ -535,160 +534,136 @@ export default function FuelUsageSummary() {
                                 })()}
                             </div>
                         </div>
-                        <table className="border border-border" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt', marginTop: '24px' }}>
-                            <thead>
-                                <tr>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Type of Vehicle</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Plate Number</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Number of Cylinder</th>
-                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>ODOMETER</th>
-                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Reading</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Fuel Used (B)</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Distance Travelled Per Liter (C=A%B)</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Normal Travel Km. Per Liter (D)</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Excess</th>
-                                    <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Remarks</th>
-                                </tr>
-                                <tr>
-                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Beginning</th>
-                                    <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Ending</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reportData && reportData.length > 0 ? (
-                                    reportData.map((item, idx) => {
-                                        const row = item;
+                        <div className="overflow-x-auto w-full pb-4">
+                            <table className="border border-border min-w-[1000px] sm:min-w-full" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt', marginTop: '24px' }}>
+                                <thead>
+                                    <tr>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Type of Vehicle</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Plate Number</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Number of Cylinder</th>
+                                        <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>ODOMETER</th>
+                                        <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Reading</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Distance Travelled (A)</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Fuel Used (B)</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Distance Travelled Per Liter (C=A%B)</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Normal Travel Km. Per Liter (D)</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Total Liters Consumed Plus 10% Allowance (E=A%DX1.1)</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Excess</th>
+                                        <th rowSpan={2} className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Remarks</th>
+                                    </tr>
+                                    <tr>
+                                        <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Beginning</th>
+                                        <th className="border border-border text-black" style={{ textAlign: 'center', padding: '6px', width: '10%', fontSize: '10pt' }}>Ending</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reportData && reportData.length > 0 ? (
+                                        reportData.map((item, idx) => {
+                                            const row = item;
+                                            
+                                            // Ensure console isn't excessively noisy in production, but let's keep it safely bound
+                                            const start = getOdometerValue(row, 'start');
+                                            const end = getOdometerValue(row, 'end');
+                                            const totalDistanceNumber =
+                                                typeof start === 'number' && !Number.isNaN(start) &&
+                                                    typeof end === 'number' && !Number.isNaN(end)
+                                                    ? end - start
+                                                    : null;
 
-                                        // Debug logging for each row
-                                        console.log(`Row ${idx} data:`, {
-                                            from_gas_slip: row.from_gas_slip,
-                                            distance_start: row.distance_start,
-                                            odometer_before: row.odometer_before,
-                                            distance_end: row.distance_end,
-                                            odometer_after: row.odometer_after,
-                                            gas_slip_document_no: row.gas_slip_document_no
-                                        });
+                                            const fuelUsedSource = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
+                                            const fuelUsedNumber = parseFloat((typeof fuelUsedSource === 'number' ? fuelUsedSource : Number(fuelUsedSource) || 0).toFixed(2));
 
-                                        const start = getOdometerValue(row, 'start');
-                                        const end = getOdometerValue(row, 'end');
-                                        const totalDistanceNumber =
-                                            typeof start === 'number' && !Number.isNaN(start) &&
-                                                typeof end === 'number' && !Number.isNaN(end)
-                                                ? end - start
+                                            const normalTravelKmPerLiter = 7;
+
+                                            const distancePerLiter = totalDistanceNumber !== null
+                                                ? (fuelUsedNumber > 0 ? totalDistanceNumber / fuelUsedNumber : 0)
                                                 : null;
 
-                                        const fuelUsedSource = row.total_fuel_used ?? row.total_liters ?? row.oil_used ?? 0;
-                                        const fuelUsedNumber = typeof fuelUsedSource === 'number' ? fuelUsedSource : Number(fuelUsedSource) || 0;
+                                            const totalLitersWithAllowance = totalDistanceNumber !== null && normalTravelKmPerLiter > 0
+                                                ? (totalDistanceNumber / normalTravelKmPerLiter) * 1.1
+                                                : null;
 
-                                        const normalTravelKmPerLiter = 7; // D – assumed standard value
+                                            const excess = totalLitersWithAllowance !== null
+                                                ? fuelUsedNumber - totalLitersWithAllowance
+                                                : null;
 
-                                        const distancePerLiter = totalDistanceNumber !== null
-                                            ? (fuelUsedNumber > 0 ? totalDistanceNumber / fuelUsedNumber : 0)
-                                            : null;
+                                            const plateNo = row.plate_no || '';
+                                            const numberOfCylinder = row.number_of_cylinder || row.number_of_cylinders || '';
+                                            const vehicleType =
+                                                row.vehicle_type ||
+                                                row.vehicle ||
+                                                search ||
+                                                '';
 
-                                        const totalLitersWithAllowance = totalDistanceNumber !== null && normalTravelKmPerLiter > 0
-                                            ? (totalDistanceNumber / normalTravelKmPerLiter) * 1.1
-                                            : null;
-
-                                        const excess = totalLitersWithAllowance !== null
-                                            ? fuelUsedNumber - totalLitersWithAllowance
-                                            : null;
-
-                                        const firstRow = reportData[0] || {};
-                                        const plateNo =
-                                            row.plate_no ||
-                                            reportInfo?.plate_no ||
-                                            firstRow?.plate_no ||
-                                            '';
-                                        const numberOfCylinder =
-                                            row.number_of_cylinder ||
-                                            reportInfo?.number_of_cylinder ||
-                                            firstRow?.number_of_cylinder ||
-                                            firstRow?.number_of_cylinders ||
-                                            '';
-                                        const vehicleType =
-                                            row.vehicle_type ||
-                                            row.vehicle ||
-                                            reportInfo?.vehicle_type ||
-                                            search ||
-                                            '';
-
-                                        return (
-                                            <tr key={idx}>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{vehicleType}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{plateNo}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{numberOfCylinder}</td>
-                                                <td className="text-black relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                    {start ?? ''}
-                                                </td>
-                                                <td className="text-black relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
-                                                    {end ?? ''}
-                                                </td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalDistanceNumber !== null ? totalDistanceNumber : ''}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{fuelUsedNumber}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{distancePerLiter !== null ? distancePerLiter.toFixed(2) : ''}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{normalTravelKmPerLiter}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalLitersWithAllowance !== null ? totalLitersWithAllowance.toFixed(2) : ''}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{excess !== null ? excess.toFixed(2) : ''}</td>
-                                                <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{item.remarks || ''}</td>
+                                            return (
+                                                <tr key={idx}>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{vehicleType}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{plateNo}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{numberOfCylinder}</td>
+                                                    <td className="text-black relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                        {start ?? ''}
+                                                    </td>
+                                                    <td className="text-black relative" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>
+                                                        {end ?? ''}
+                                                    </td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalDistanceNumber !== null ? totalDistanceNumber : ''}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{fuelUsedNumber}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{distancePerLiter !== null ? distancePerLiter.toFixed(2) : ''}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{normalTravelKmPerLiter}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{totalLitersWithAllowance !== null ? totalLitersWithAllowance.toFixed(2) : ''}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{excess !== null ? excess.toFixed(2) : ''}</td>
+                                                    <td className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>{item.remarks || ''}</td>
+                                                </tr>
+                                            );
+                                        })
+                                    ) : (
+                                        rows.map((r) => (
+                                            <tr key={r}>
+                                                {Array(12).fill(0).map((_, j) => (
+                                                    <td key={j} className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>&nbsp;</td>
+                                                ))}
                                             </tr>
-                                        );
-                                    })
-                                ) : (
-                                    rows.map((r) => (
-                                        <tr key={r}>
-                                            {Array(12).fill(0).map((_, j) => (
-                                                <td key={j} className="text-black" style={{ border: '1px dotted', borderColor: 'var(--border)', padding: '8px', fontSize: '10pt', textAlign: 'center' }}>&nbsp;</td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                        <div className="text-black" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '48px', fontSize: '15px' }}>
-                            <div>
-                                <div>Prepared by:</div>
-                                <br />
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', minWidth: '240px', gap: '12px' }}>
-                                    <span style={{ textAlign: 'center' }}>Name:</span>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="text-black flex flex-col md:flex-row justify-between gap-8 mt-12 text-[15px]">
+                            <div className="w-full md:w-auto">
+                                <div className="font-medium mb-4">Prepared by:</div>
+                                <div className="flex items-center justify-start sm:justify-center mb-2 min-w-[240px] gap-3">
+                                    <span className="w-16 sm:w-auto">Name:</span>
                                     <Input
                                         value={preparedByName}
                                         onChange={(e) => setPreparedByName(e.target.value)}
-                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
-                                        style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0 flex-1 max-w-[220px]"
                                     />
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '240px', gap: '12px' }}>
-                                    <span style={{ textAlign: 'center' }}>Position:</span>
+                                <div className="flex items-center justify-start sm:justify-center min-w-[240px] gap-3">
+                                    <span className="w-16 sm:w-auto">Position:</span>
                                     <Input
                                         value={preparedByPosition}
                                         onChange={(e) => setPreparedByPosition(e.target.value)}
-                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
-                                        style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0 flex-1 max-w-[220px]"
                                     />
                                 </div>
                             </div>
-                            <div style={{ marginLeft: '48px' }}>
-                                <div>Verified and Found Correct:</div>
-                                <br />
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', minWidth: '240px', gap: '12px' }}>
-                                    <span style={{ textAlign: 'center' }}>Name:</span>
+                            <div className="w-full md:w-auto md:ml-12 mt-6 md:mt-0">
+                                <div className="font-medium mb-4">Verified and Found Correct:</div>
+                                <div className="flex items-center justify-start sm:justify-center mb-2 min-w-[240px] gap-3">
+                                    <span className="w-16 sm:w-auto">Name:</span>
                                     <Input
                                         value={verifiedBy.name}
                                         onChange={e => setVerifiedBy({ ...verifiedBy, name: e.target.value })}
-                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
-                                        style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0 flex-1 max-w-[220px]"
                                     />
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '240px', gap: '12px' }}>
-                                    <span style={{ textAlign: 'center' }}>Position:</span>
+                                <div className="flex items-center justify-start sm:justify-center min-w-[240px] gap-3">
+                                    <span className="w-16 sm:w-auto">Position:</span>
                                     <Input
                                         value={verifiedBy.position}
                                         onChange={e => setVerifiedBy({ ...verifiedBy, position: e.target.value })}
-                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0"
-                                        style={{ flex: 1, textAlign: 'center', maxWidth: '220px' }}
+                                        className="text-black h-8 border-0 border-b border-border rounded-none bg-transparent px-0 text-center text-[14px] shadow-none focus-visible:ring-0 flex-1 max-w-[220px]"
                                     />
                                 </div>
                             </div>

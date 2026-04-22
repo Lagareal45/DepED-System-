@@ -21,6 +21,7 @@ export default function Dashboard() {
         trafficSources,
         trafficSourcesList,
         activities,
+        drafts,
         loading,
         error,
         refreshData
@@ -227,6 +228,64 @@ export default function Dashboard() {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </div>
+
+                {/* Saved Drafts */}
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-gray-900">Saved Drafts</h2>
+                        <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800">
+                            {drafts.length} Pending
+                        </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="px-6 py-3 font-semibold">Form Type</th>
+                                    <th className="px-6 py-3 font-semibold">Driver</th>
+                                    <th className="px-6 py-3 font-semibold">Last Updated</th>
+                                    <th className="px-6 py-3 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {drafts.length > 0 ? (
+                                    drafts.map((draft) => (
+                                        <tr key={draft.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center">
+                                                    <div className={`p-1.5 rounded-md mr-3 ${
+                                                        draft.form_type === 'Trip Ticket' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                                                    }`}>
+                                                        {draft.form_type === 'Trip Ticket' ? <FileText size={14} /> : <FileSpreadsheet size={14} />}
+                                                    </div>
+                                                    <span className="font-medium text-gray-900">{draft.form_type}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">{draft.data?.driver || 'Unspecified'}</td>
+                                            <td className="px-6 py-4 text-gray-400">
+                                                {new Date(draft.updated_at).toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <a
+                                                    href={draft.form_type === 'Trip Ticket' ? `/trip-tickets?draft_id=${draft.id}` : `/gas-slips?draft_id=${draft.id}`}
+                                                    className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none transition-colors"
+                                                >
+                                                    Continue Filling
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">
+                                            No saved drafts found
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
