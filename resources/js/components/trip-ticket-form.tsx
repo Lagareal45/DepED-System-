@@ -83,8 +83,11 @@ export function TripTicketForm() {
     const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
     const [customDrivers, setCustomDrivers] = useState<string[]>([]);
+    const [deletedDrivers, setDeletedDrivers] = useState<string[]>([]);
     const [isAddingDriver, setIsAddingDriver] = useState(false);
     const [newDriverName, setNewDriverName] = useState('');
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [driverToDelete, setDriverToDelete] = useState('');
 
     useEffect(() => {
         // Load custom drivers
@@ -92,6 +95,14 @@ export function TripTicketForm() {
         if (saved) {
             try {
                 setCustomDrivers(JSON.parse(saved));
+            } catch (e) { }
+        }
+
+        // Load deleted drivers
+        const savedDeleted = localStorage.getItem('deletedDrivers');
+        if (savedDeleted) {
+            try {
+                setDeletedDrivers(JSON.parse(savedDeleted));
             } catch (e) { }
         }
 
@@ -121,16 +132,57 @@ export function TripTicketForm() {
 
     const handleAddDriver = () => {
         if (newDriverName.trim()) {
-            const updated = [...customDrivers, newDriverName.trim()];
-            setCustomDrivers(updated);
-            localStorage.setItem('customDrivers', JSON.stringify(updated));
-            handleChange('driver', newDriverName.trim());
+            const newName = newDriverName.trim();
+            
+            if (!customDrivers.includes(newName)) {
+                const updated = [...customDrivers, newName];
+                setCustomDrivers(updated);
+                localStorage.setItem('customDrivers', JSON.stringify(updated));
+            }
+
+            if (deletedDrivers.includes(newName)) {
+                const updatedDeleted = deletedDrivers.filter(d => d !== newName);
+                setDeletedDrivers(updatedDeleted);
+                localStorage.setItem('deletedDrivers', JSON.stringify(updatedDeleted));
+            }
+
+            handleChange('driver', newName);
             setNewDriverName('');
             setIsAddingDriver(false);
         }
     };
 
-    const allDrivers = [...DEFAULT_DRIVERS, ...customDrivers];
+    const handleDeleteDriver = (e: React.MouseEvent, driverName: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDriverToDelete(driverName);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const executeDeleteDriver = () => {
+        if (!driverToDelete) return;
+
+        if (customDrivers.includes(driverToDelete)) {
+            const updated = customDrivers.filter(d => d !== driverToDelete);
+            setCustomDrivers(updated);
+            localStorage.setItem('customDrivers', JSON.stringify(updated));
+        }
+
+        const updatedDeleted = [...deletedDrivers, driverToDelete];
+        setDeletedDrivers(updatedDeleted);
+        localStorage.setItem('deletedDrivers', JSON.stringify(updatedDeleted));
+
+        if (formData.driver === driverToDelete) {
+            handleChange('driver', '');
+        }
+
+        setIsDeleteDialogOpen(false);
+        setDriverToDelete('');
+    };
+
+    const allDrivers = [...DEFAULT_DRIVERS, ...customDrivers].filter(
+        (d, index, self) => self.indexOf(d) === index && !deletedDrivers.includes(d)
+    );
 
     const addDestination = () => {
         setFormData({
@@ -227,7 +279,7 @@ export function TripTicketForm() {
             const xsrf = getCookie('XSRF-TOKEN');
             const draftId = new URLSearchParams(window.location.search).get('draft_id');
             const dataToSave = { ...formData };
-            
+
             const payload = {
                 id: draftId || undefined,
                 form_type: 'Trip Ticket',
@@ -247,7 +299,7 @@ export function TripTicketForm() {
             });
 
             if (!res.ok) throw new Error('Failed to save draft');
-            
+
             if (!isAutoSave) {
                 toast.success('Draft stored securely.', {
                     description: 'Your progress has been saved. You may resume editing this form from your Dashboard at your convenience.',
@@ -476,7 +528,26 @@ export function TripTicketForm() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {allDrivers.map(d => (
-                                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                                            <SelectItem key={d} value={d} className="relative group pr-12">
+                                                <span>{d}</span>
+                                                <button
+                                                    type="button"
+                                                    title="Delete driver"
+                                                    onPointerDown={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleDeleteDriver(e as any, d);
+                                                    }}
+                                                    onPointerUp={(e) => e.stopPropagation()}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                    }}
+                                                    className="absolute right-7 top-1/2 -translate-y-1/2 flex items-center justify-center rounded bg-red-600 text-white p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 pointer-events-auto"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -950,6 +1021,16 @@ export function TripTicketForm() {
                 title="Confirm Reset"
                 description="Are you sure you want to reset? This will clear all entered information and cannot be undone."
                 confirmLabel="Reset"
+                variant="danger"
+            />
+
+            <ConfirmDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                onConfirm={executeDeleteDriver}
+                title="Are you sure you want to delete?"
+                description={`This will remove ${driverToDelete} from the drivers list. This action cannot be undone.`}
+                confirmLabel="Delete"
                 variant="danger"
             />
 
