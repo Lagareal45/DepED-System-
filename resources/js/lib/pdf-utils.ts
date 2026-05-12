@@ -488,7 +488,7 @@ export const generateGasSlipHTML = (data: any) => {
         .container { display: flex; justify-content: space-between; gap: 12px; }
         @media print {
             @page { margin: 0; }
-            body { margin: 8px; }
+            body { margin: 24px 12px 12px 12px; }
         }
     </style>
 </head>
